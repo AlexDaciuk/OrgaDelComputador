@@ -18,8 +18,8 @@ int main(int argc, char const *argv[]) {
 
         printf("Is there any 1 in x : %d \n", is_any_bit_1);
         printf("Is there any 0 in x : %d \n", is_any_bit_0);
-        printf("Is there any 1 in the less significative byte in x : %d \n", is_any_less_sig_byte_bit_1);
-        printf("Is there any 0 in the less significative byte in x : %d \n", is_any_less_sig_byte_bit_0);
+        printf("Is there any 1 in the less significative byte of x : %d \n", is_any_less_sig_byte_bit_1);
+        printf("Is there any 0 in the less significative byte of x : %d \n", is_any_less_sig_byte_bit_0);
 
 
         return 0;
