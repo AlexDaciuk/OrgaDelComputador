@@ -50,3 +50,11 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+#Steps
+*.i
+*.s
+*.o
+
+#Build folders
+Lab1/Parte_1/builds
