@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <sysexits.h>
-#define BUFF_SIZE 5
+#include <string.h>
+#define BUFF_SIZE 10
 
 int main(int argc, char const *argv[]) {
         /*
@@ -14,6 +15,7 @@ int main(int argc, char const *argv[]) {
 
         FILE *sptr, *dptr;
         unsigned char buffer[BUFF_SIZE];
+        int buff_read = 0;
 
         sptr = fopen(argv[1], "rb");
         if (!sptr) {
@@ -27,13 +29,12 @@ int main(int argc, char const *argv[]) {
                 return EX_CANTCREAT; // Codigo 73
         }
 
-        while(!feof(sptr)) {
-                /* Trato de leer 10 bytes */
-                int buff_read = fread(buffer, sizeof(buffer), 1, sptr);
+        while( (buff_read = fread(buffer, sizeof(char), 10, sptr)) ) {
                 printf("Lei %i paquetes de %i bytes del archivo.\n", buff_read, BUFF_SIZE);
 
-                int buff_write = fwrite(buffer, sizeof(buffer), 1, dptr);
+                int buff_write = fwrite(buffer, sizeof(char), buff_read, dptr);
                 printf("Escribi %i paquetes de %i bytes al archivo.\n", buff_write, BUFF_SIZE );
         }
+
         return EX_OK;
 }
