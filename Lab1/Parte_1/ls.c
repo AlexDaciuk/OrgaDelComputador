@@ -22,4 +22,5 @@ int main(int argc, char const *argv[]) {
     printf("%s  \n", dp->d_name);
   }
 
+  return 0;
 }
