@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <sysexits.h>
 #include <linux/limits.h>
 
 int main(int argc, char const *argv[]) {
         /* Chequeo cantidad de argumentos */
         if (argc > 1) {
-                return 22;
+                return EX_USAGE; // Codigo 64
         }
 
         /* Aprovecho PATH_MAX que esta en limits.h */
@@ -22,5 +23,5 @@ int main(int argc, char const *argv[]) {
                 printf("%s  \n", dp->d_name);
         }
 
-        return 0;
+        return EX_OK;
 }
