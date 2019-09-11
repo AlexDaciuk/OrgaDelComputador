@@ -30,10 +30,17 @@ int main(int argc, char const *argv[]) {
         }
 
         while( (buff_read = fread(buffer, sizeof(char), 10, sptr)) ) {
-                printf("Lei %i paquetes de %i bytes del archivo.\n", buff_read, BUFF_SIZE);
+                printf("Lei %i paquetes de %i bytes.\n", buff_read, BUFF_SIZE);
 
-                int buff_write = fwrite(buffer, sizeof(char), buff_read, dptr);
-                printf("Escribi %i paquetes de %i bytes al archivo.\n", buff_write, BUFF_SIZE );
+                int total_wrote = 0;
+
+                while ((buff_read - total_wrote) != 0) {
+                        int buff_write = fwrite(buffer, sizeof(char), buff_read, dptr);
+
+                        total_wrote += buff_write;
+
+                        printf("Escribi %i paquetes de %i bytes.\n", buff_write, BUFF_SIZE );
+                }
         }
 
         return EX_OK;
