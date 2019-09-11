@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <sysexits.h>
-#include <string.h>
 #define BUFF_SIZE 10
 
 int main(int argc, char const *argv[]) {
