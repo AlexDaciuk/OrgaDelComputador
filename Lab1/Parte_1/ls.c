@@ -29,16 +29,16 @@ int main(int argc, char const *argv[]) {
 
 				struct dirent *dp;
 				int dir_fd;
-				struct stat *fileStat;
+				struct stat fileStat;
 				DIR *dir = opendir(cwd);
 				dir_fd = dirfd(dir);
 
 				while ( (dp = readdir(dir)) ) {
 								printf("\nDirfd: %i, name: %s\n", dir_fd, dp->d_name);
-								if (fstatat(dir_fd, dp->d_name, fileStat, 0) != -1) {
-												printf("%s \t %li", dp->d_name, fileStat->st_size);
+								if (fstatat(dir_fd, dp->d_name, &fileStat, 0) != -1) {
+												printf("%s \t %li\n", dp->d_name, fileStat.st_size);
 								}
-								printf("Errno %i\n", errno);
+								//printf("Errno %m\n");
 				}
 
 				return EX_OK;
