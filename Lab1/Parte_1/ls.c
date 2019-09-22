@@ -37,7 +37,7 @@ int main(int argc, char const *argv[]) {
 				dir_fd = dirfd(dir);
 
 				while ( (dp = readdir(dir)) ) {
-								printf("\nDirfd: %i, name: %s\n", dir_fd, dp->d_name);
+								printf("Dirfd: %i, name: %s\n", dir_fd, dp->d_name);
 								if (fstatat(dir_fd, dp->d_name, &fileStat, 0) != -1) {
 												printf("%s \t %li\n", dp->d_name, fileStat.st_size);
 								}
