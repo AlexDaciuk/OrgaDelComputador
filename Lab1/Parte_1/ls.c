@@ -17,11 +17,14 @@ int main(int argc, char const *argv[]) {
 				char cwd[PATH_MAX];
 
 				/* Chequeo cantidad de argumentos */
-				if (argc == 1) {
+				switch ( argc ) {
+				case 1:
 								getcwd(cwd, sizeof(cwd));
-				} else if (argc == 2) {
+								break;
+				case 2:
 								*cwd = *argv[1];
-				} else {
+								break;
+				default:
 								return EX_USAGE;
 				}
 
