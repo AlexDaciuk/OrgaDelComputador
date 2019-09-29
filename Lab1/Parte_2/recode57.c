@@ -1,7 +1,9 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
 #include <unistd.h>
+
 
 enum encoding {
 				UTF8, UTF16BE, UTF16LE, UTF32BE, UTF32LE,
@@ -119,33 +121,23 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 												// TODO: Implementar los cuatro casos posibles de UTF-8.
 												break;
 								case UTF16BE:
-												if (buf[b+1] <= 0xFF && buf[b+2] <= 0xFF) {
+												if ( (buf[b+1] >= 0xD8 && buf[b+1] <= 0xDB &&
+												      buf[b+3] >= 0xDC && buf[b+3] <= 0xDF) ) {
+
+												} else {
 																cp |= buf[b++] << 8;
 																cp |= buf[b++];
-												} else if (
-																( b[b+1] <= 0xDBFF && b[b+1] >= 0xD800 ) &&
-																( b[b+2] <= 0xDFFF && b[b+2] >= 0xDC00 )
-																) {
-																// CP = (S1 - 0xD800 << 10 | S2 - 0xDC00) + 0x10000
-																cp |= (buf[b++] - 0xD800) << 10;
-																cp |= buf[b++] - 0xDC00;
-																cp += 0x10000;
 												}
 
 												*nbytes -= 4;
 												break;
 								case UTF16LE:
-												if (buf[b+1] <= 0xFF && buf[b+2] <= 0xFF) {
+												if ( (buf[b+2] >= 0xD8 && buf[b+2] <= 0xDB &&
+												      buf[b+4] >= 0xDC && buf[b+4] <= 0xDF) ) {
+
+												} else {
 																cp |= buf[b+2] << 8;
 																cp |= buf[b++];
-												} else if (
-																( b[b+1] <= 0xDBFF && b[b+1] >= 0xD800 ) &&
-																( b[b+2] <= 0xDFFF && b[b+2] >= 0xDC00 )
-																) {
-																// CP = (S1 - 0xD800 << 10 | S2 - 0xDC00) + 0x10000
-																cp |= (buf[b+2] - 0xD800) << 10;
-																cp |= buf[b++] - 0xDC00;
-																cp += 0x10000;
 												}
 
 												*nbytes -= 4;
@@ -175,6 +167,7 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
  */
 int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbuf) {
 				// TODO: Implementar.
+				int writen_bytes = 0;
 				for (int i=0, b=0; i < npoints; i++) {
 								uint32_t cp = input[i];
 								switch (enc) {
@@ -192,24 +185,30 @@ int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbu
 												break;
 								case UTF16BE:
 												if (cp <= 0xFFFF) {
-
+																outbuf[b++] = (cp >> 8) & 0xFF;
+																outbuf[b++] = cp & 0xFF;
 												} else {
-
+																cp -= 0x10000;
+																outbuf[b++] = ((cp >> 8) + 0xD800) & 0xFF;
+																outbuf[b++] = (cp + 0xDC00) & 0xFF;
 												}
 
 												break;
 								case UTF16LE:
 												if (cp <= 0xFFFF) {
-
+																outbuf[b+2] = (cp >> 8) & 0xFF;
+																outbuf[b++] = cp & 0xFF;
 												} else {
-
+																outbuf[b+2] = ((cp >> 8) + 0xD800) & 0xFF;
+																outbuf[b++] = (cp + 0xDC00) & 0xFF;
 												}
 												break;
 								case UTF8:
 												break;
 								}
+								writen_bytes = i;
 				}
-				return i;
+				return writen_bytes;
 }
 
 
