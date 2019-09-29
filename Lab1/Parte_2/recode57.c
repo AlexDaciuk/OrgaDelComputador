@@ -123,10 +123,11 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 								case UTF16BE:
 												if ( (buf[b+1] >= 0xD8 && buf[b+1] <= 0xDB &&
 												      buf[b+3] >= 0xDC && buf[b+3] <= 0xDF) ) {
-
+																*nbytes -= 4;
 												} else {
 																cp |= buf[b++] << 8;
 																cp |= buf[b++];
+																*nbytes -= 2;
 												}
 
 												*nbytes -= 4;
@@ -135,12 +136,14 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 												if ( (buf[b+2] >= 0xD8 && buf[b+2] <= 0xDB &&
 												      buf[b+4] >= 0xDC && buf[b+4] <= 0xDF) ) {
 
+																*nbytes -= 4;
 												} else {
 																cp |= buf[b+2] << 8;
 																cp |= buf[b++];
+																*nbytes -= 2;
 												}
 
-												*nbytes -= 4;
+
 												break;
 								}
 
