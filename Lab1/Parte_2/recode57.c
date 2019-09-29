@@ -104,6 +104,7 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 												cp |= buf[b++] << 8;
 												cp |= buf[b++] << 16;
 												cp |= buf[b++] << 24;
+
 												*nbytes -= 4;
 												break;
 								case UTF32BE:
@@ -121,8 +122,14 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 												if (buf[b+1] <= 0xFF && buf[b+2] <= 0xFF) {
 																cp |= buf[b++] << 8;
 																cp |= buf[b++];
-												} else {
-																// TODO: Implementar después comprobando surrogates.
+												} else if (
+																( b[b+1] <= 0xDBFF && b[b+1] >= 0xD800 ) &&
+																( b[b+2] <= 0xDFFF && b[b+2] >= 0xDC00 )
+																) {
+																// CP = (S1 - 0xD800 << 10 | S2 - 0xDC00) + 0x10000
+																cp |= (buf[b++] - 0xD800) << 10;
+																cp |= buf[b++] - 0xDC00;
+																cp += 0x10000;
 												}
 
 												*nbytes -= 4;
@@ -133,6 +140,14 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 												if (buf[b+1] <= 0xFF && buf[b+2] <= 0xFF) {
 																cp |= buf[b+2] << 8;
 																cp |= buf[b++];
+												} else if (
+																( b[b+1] <= 0xDBFF && b[b+1] >= 0xD800 ) &&
+																( b[b+2] <= 0xDFFF && b[b+2] >= 0xDC00 )
+																) {
+																// CP = (S1 - 0xD800 << 10 | S2 - 0xDC00) + 0x10000
+																cp |= (buf[b+2] - 0xD800) << 10;
+																cp |= buf[b++] - 0xDC00;
+																cp += 0x10000;
 												}
 												*nbytes -= 4;
 												break;
@@ -140,7 +155,7 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 
 								destbuf[i++] = cp;
 				}
-				return 0; // TODO: devolver número de codepoints.
+				return i;
 }
 
 /*
