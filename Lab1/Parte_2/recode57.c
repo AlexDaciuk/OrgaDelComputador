@@ -31,12 +31,12 @@ static enum encoding str_to_encoding(const char *enc) {
 static enum encoding bom_to_encoding(uint8_t *bom) {
 				if (bom[0] == 0xFE && bom[1] == 0xFF) {
 								return UTF16BE;
-				} else if (bom[0] == 0xFF && bom[1] == 0xFE) {
-								return UTF16LE;
 				} else if (bom[0] == 0x00 && bom[1] == 0x00 && bom[2] == 0xFE && bom[3] == 0xFF) {
 								return UTF32BE;
 				} else if (bom[0] == 0xFF && bom[1] == 0xFE && bom[2] == 0x00 && bom[3] == 0x00) {
 								return UTF32LE;
+				} else if (bom[0] == 0xFF && bom[1] == 0xFE) {
+								return UTF16LE;
 				}
 
 				return UTF8;
@@ -101,12 +101,16 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 								switch (enc) {
 								case UTF32LE:
 												cp |= buf[b++];
-												// ...
+												cp |= buf[b++] << 8;
+												cp |= buf[b++] << 16;
+												cp |= buf[b++] << 24;
 												*nbytes -= 4;
 												break;
 								case UTF32BE:
 												cp |= buf[b++] << 24;
-												// ...
+												cp |= buf[b++] << 16;
+												cp |= buf[b++] << 8;
+												cp |= buf[b++];
 												*nbytes -= 4;
 												break;
 								case UTF8:
@@ -114,10 +118,23 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 												break;
 								case UTF16BE:
 												// TODO: Implementar primero rango BMP (0x0000-0xFFFF).
-												// TODO: Implementar después comprobando surrogates.
+												if (buf[b+1] <= 0xFF && buf[b+2] <= 0xFF) {
+																cp |= buf[b++] << 8;
+																cp |= buf[b++];
+												} else {
+																// TODO: Implementar después comprobando surrogates.
+												}
+
+												*nbytes -= 4;
 												break;
 								case UTF16LE:
 												// TODO: Ídem.
+												// BMP
+												if (buf[b+1] <= 0xFF && buf[b+2] <= 0xFF) {
+																cp |= buf[b+2] << 8;
+																cp |= buf[b++];
+												}
+												*nbytes -= 4;
 												break;
 								}
 
