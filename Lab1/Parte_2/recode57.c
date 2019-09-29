@@ -180,15 +180,36 @@ int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbu
 								switch (enc) {
 								case UTF32LE:
 												outbuf[b++] = cp & 0xFF;
-												// ...
+												outbuf[b++] = (cp >> 8) & 0xFF;
+												outbuf[b++] = (cp >> 16) & 0xFF;
+												outbuf[b++] = (cp >> 24) & 0xFF;
 												break;
 								case UTF32BE:
 												outbuf[b++] = (cp >> 24) & 0xFF;
-												// ...
+												outbuf[b++] = (cp >> 16) & 0xFF;
+												outbuf[b++] = (cp >> 24) & 0xFF;
+												outbuf[b++] = cp & 0xFF;
+												break;
+								case UTF16BE:
+												if (cp <= 0xFFFF) {
+
+												} else {
+
+												}
+
+												break;
+								case UTF16LE:
+												if (cp <= 0xFFFF) {
+
+												} else {
+
+												}
+												break;
+								case UTF8:
 												break;
 								}
 				}
-				return 0; // TODO: devolver número de bytes escritos.
+				return i;
 }
 
 
