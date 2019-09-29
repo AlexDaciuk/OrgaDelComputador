@@ -43,6 +43,33 @@ static enum encoding bom_to_encoding(uint8_t *bom) {
 }
 
 /*
+ * Devuelve verdadero si hay un codepoint codificado en buf.
+ */
+static bool has_codepoint(enum encoding enc, uint8_t *buf, size_t n) {
+				switch (enc) {
+				case UTF32BE:
+				case UTF32LE:
+								return n >= 4;
+				case UTF16BE:
+								// TODO: manejar surrogates.
+								return (n >= 4 ||
+								        (n >= 2 && 1 /* buf[0] NO es un high surrogate */));
+				case UTF16LE:
+								// TODO: manejar surrogates.
+								return (n >= 4 ||
+								        (n >= 2 && 1 /* buf[1] NO es un high surrogate */));
+				case UTF8:
+								return (n >= 4 ||
+								        (n >= 3 && buf[0] <= 0xEF) ||
+								        (n >= 2 && buf[0] <= 0xDF) ||
+								        (n >= 1 && buf[0] <= 0x7F));
+				default:
+								return false;
+				}
+}
+
+
+/*
  * Transforma una codificación a UCS-4.
  *
  * Argumentos:
@@ -61,9 +88,42 @@ static enum encoding bom_to_encoding(uint8_t *bom) {
  * Se debe garantiza que "destbuf" puede albergar al menos nbytes
  * elementos (caso enc=UTF-8, buf=ASCII).
  */
-int orig_to_ucs4(enum encoding enc, uint8_t *buf, ssize_t *nbytes, uint32_t *destbuf) {
-				// TODO: Implementar.
-				return 0;
+int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *destbuf) {
+				int i = 0, b = 0;
+
+				// La función has_codepoint determina que se podrá decodificar
+				// un codepoint en el encoding especificado. Así, adentro del
+				// ciclo, en cada "case" se cumple la pre-condición que hay el
+				// número adecuado de bytes presentes (no hace falta comprobarlo
+				// de nuevo).
+				while (has_codepoint(enc, &buf[b], *nbytes)) {
+								uint32_t cp = 0;
+								switch (enc) {
+								case UTF32LE:
+												cp |= buf[b++];
+												// ...
+												*nbytes -= 4;
+												break;
+								case UTF32BE:
+												cp |= buf[b++] << 24;
+												// ...
+												*nbytes -= 4;
+												break;
+								case UTF8:
+												// TODO: Implementar los cuatro casos posibles de UTF-8.
+												break;
+								case UTF16BE:
+												// TODO: Implementar primero rango BMP (0x0000-0xFFFF).
+												// TODO: Implementar después comprobando surrogates.
+												break;
+								case UTF16LE:
+												// TODO: Ídem.
+												break;
+								}
+
+								destbuf[i++] = cp;
+				}
+				return 0; // TODO: devolver número de codepoints.
 }
 
 /*
@@ -85,18 +145,19 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, ssize_t *nbytes, uint32_t *des
 int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbuf) {
 				// TODO: Implementar.
 				for (int i=0, b=0; i < npoints; i++) {
+								uint32_t cp = input[i];
 								switch (enc) {
 								case UTF32LE:
-												outbuf[b++] = input[i] & 0xFF;
+												outbuf[b++] = cp & 0xFF;
 												// ...
 												break;
 								case UTF32BE:
-												outbuf[b++] = input[i] >> 24;
+												outbuf[b++] = (cp >> 24) & 0xFF;
 												// ...
 												break;
 								}
 				}
-				return 0;
+				return 0; // TODO: devolver número de bytes escritos.
 }
 
 
@@ -125,8 +186,9 @@ int main(int argc, char *argv[]) {
 				uint8_t inbuf[1024];
 				uint8_t outbuf[1024*4];
 				uint32_t ucs4[1024];
+				size_t prevbytes = 0;
 				ssize_t inbytes;
-				int npoints, outbytes, prevbytes = 0;
+				int npoints, outbytes;
 
 				// Si orig_enc no fue UTF-32, quedaron 2 o 4 bytes en "bom" que
 				// deben ser prefijados en inbuf.
@@ -138,12 +200,18 @@ int main(int argc, char *argv[]) {
 								prevbytes = 2;
 				}
 
+				// TODO: Si dest_enc no es UTF-8, hay que escribir un BOM.
+
 				while ((inbytes = read(STDIN_FILENO, inbuf + prevbytes, sizeof(inbuf) - prevbytes)) > 0) {
-								npoints = orig_to_ucs4(orig_enc, inbuf, &inbytes, ucs4);
+								prevbytes += inbytes;
+								// fprintf(stderr, "Processing: %zu bytes, ", prevbytes);
+
+								npoints = orig_to_ucs4(orig_enc, inbuf, &prevbytes, ucs4);
 								outbytes = ucs4_to_dest(dest_enc, ucs4, npoints, outbuf);
+								// fprintf(stderr, "codepoints: %d, output: %d bytes, remaining: %zu bytes\n",
+								//         npoints, outbytes, prevbytes);
 
 								write(STDOUT_FILENO, outbuf, outbytes);
-								prevbytes = inbytes;
 
 								if (prevbytes > 0) {
 												// TODO: Se deben mover al incio de inbuf los bytes que
