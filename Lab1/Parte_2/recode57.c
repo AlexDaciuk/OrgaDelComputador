@@ -112,13 +112,13 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 												cp |= buf[b++] << 16;
 												cp |= buf[b++] << 8;
 												cp |= buf[b++];
+
 												*nbytes -= 4;
 												break;
 								case UTF8:
 												// TODO: Implementar los cuatro casos posibles de UTF-8.
 												break;
 								case UTF16BE:
-												// TODO: Implementar primero rango BMP (0x0000-0xFFFF).
 												if (buf[b+1] <= 0xFF && buf[b+2] <= 0xFF) {
 																cp |= buf[b++] << 8;
 																cp |= buf[b++];
@@ -135,8 +135,6 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 												*nbytes -= 4;
 												break;
 								case UTF16LE:
-												// TODO: Ídem.
-												// BMP
 												if (buf[b+1] <= 0xFF && buf[b+2] <= 0xFF) {
 																cp |= buf[b+2] << 8;
 																cp |= buf[b++];
@@ -149,6 +147,7 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 																cp |= buf[b++] - 0xDC00;
 																cp += 0x10000;
 												}
+
 												*nbytes -= 4;
 												break;
 								}
