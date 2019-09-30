@@ -66,6 +66,7 @@ int main(int argc, char const *argv[]) {
 												return EX_NOINPUT; // Codigo 66
 								} else if (buff_read < 0 ) {
 												perror("Error: ");
+												return EX_IOERR;
 								}
 
 				}
