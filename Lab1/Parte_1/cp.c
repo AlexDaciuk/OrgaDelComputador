@@ -45,7 +45,7 @@ int main(int argc, char const *argv[]) {
 				}
 
 				while( (buff_read = read(r_fd, buffer, BUFF_SIZE)) )   {
-								if (errno == 0) {
+								if ( buff_read > 0) {
 												printf("Lei  %i bytes.\n", buff_read);
 
 												int total_wrote = 0;
@@ -69,9 +69,6 @@ int main(int argc, char const *argv[]) {
 								}
 
 				}
-
-				if (errno != 0)
-								printf("Errno : %i\n", errno );
 
 				return EX_OK;
 }
