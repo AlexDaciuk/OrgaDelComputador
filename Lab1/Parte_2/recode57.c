@@ -40,7 +40,6 @@ static enum encoding bom_to_encoding(uint8_t *bom) {
 				} else if (bom[0] == 0xFF && bom[1] == 0xFE) {
 								return UTF16LE;
 				}
-
 				return UTF8;
 }
 
@@ -98,18 +97,18 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 								uint32_t cp = 0;
 								switch (enc) {
 								case UTF32LE:
+												cp |= (buf[b++] << 24);
+												cp |= (buf[b++] << 16);
+												cp |= (buf[b++] << 8);
 												cp |= buf[b++];
-												cp |= buf[b++] << 8;
-												cp |= buf[b++] << 16;
-												cp |= buf[b++] << 24;
 
 												*nbytes -= 4;
 												break;
 								case UTF32BE:
-												cp |= buf[b++] << 24;
-												cp |= buf[b++] << 16;
-												cp |= buf[b++] << 8;
 												cp |= buf[b++];
+												cp |= (buf[b++] << 8);
+												cp |= (buf[b++] << 16);
+												cp |= (buf[b++] << 24);
 
 												*nbytes -= 4;
 												break;
@@ -118,14 +117,21 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 												break;
 								case UTF16BE:
 												if (((0xD8 <= buf[b]) && (buf[b] <= 0xDB) &&  (0xDC <= buf[b+2]) && (buf[b+2] <= 0xDF))) {
-
-																cp += 0x10000;
+																cp |= buf[b++];
+																cp |= buf[b++]<< 8;
+																cp &= 0xFF03;
+																cp <<= 10;
+																cp |= buf[b++];
+																cp |= buf[b++]<<8;
+																cp += 0x08000000;
 
 																*nbytes -= 4;
 												} else {
-																cp |= buf[b++] << 8;
 																cp |= buf[b++];
+																cp |= buf[b++]<< 8;
+																cp <<= 16;
 																*nbytes -= 2;
+
 												}
 
 												*nbytes -= 4;
@@ -151,6 +157,10 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 
 
 												break;
+								default:
+												fprintf(stderr, "Entre al default\n");
+												break;
+
 								}
 
 								destbuf[i++] = cp;
@@ -175,31 +185,45 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
  * elementos, o bytes (caso enc=UTF-32).
  */
 int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbuf) {
-				// TODO: Implementar.
 				int writen_bytes = 0;
-				for (int i=0, b=0; i < npoints; i++) {
+
+				int b = 0;
+
+				// TODO: Si dest_enc no es UTF-8, hay que empezar a escribir 2 o 4 bytes mas adelante del comienzo del buff de salida
+				if ((enc == UTF16BE) | (enc == UTF16LE) ) {
+								b = 2;
+				} else if ((enc == UTF32BE) | (enc == UTF32LE)) {
+								b = 4;
+				}
+
+				for (int i=0; i < npoints; i++) {
 								uint32_t cp = input[i];
+
 								switch (enc) {
 								case UTF32LE:
-												outbuf[b++] |= cp & 0xFF;
-												outbuf[b++] |= (cp >> 8) & 0xFF;
-												outbuf[b++] |= (cp >> 16) & 0xFF;
-												outbuf[b++] |= (cp >> 24) & 0xFF;
+												outbuf[b++] = (cp >> 24) & 0xFF;
+												outbuf[b++] = (cp >> 16) & 0xFF;
+												outbuf[b++] = (cp >> 8) & 0xFF;
+												outbuf[b++] = (cp & 0xFF);
+
+
 												break;
 								case UTF32BE:
-												outbuf[b++] |= (cp >> 24) & 0xFF;
-												outbuf[b++] |= (cp >> 16) & 0xFF;
-												outbuf[b++] |= (cp >> 24) & 0xFF;
-												outbuf[b++] |= cp & 0xFF;
+												outbuf[b++] = cp & 0xFF;
+												outbuf[b++] = (cp >> 8) & 0xFF;
+												outbuf[b++] = (cp >> 16) & 0xFF;
+												outbuf[b++] = (cp >> 24) & 0xFF;
+
 												break;
 								case UTF16BE:
 												if (cp <= 0xFFFF) {
 																outbuf[b++] = (cp >> 8) & 0xFF;
+																fprintf(stderr, "outbuf[%i] vale %#x\n", b-1, outbuf[b-1] );
 																outbuf[b++] = cp & 0xFF;
+																fprintf(stderr, "outbuf[%i] vale %#x\n", b-1, outbuf[b-1] );
 												} else {
 																cp -= 0x10000;
-																outbuf[b++] = ((cp >> 8) + 0xD800) & 0xFF;
-																outbuf[b++] = (cp + 0xDC00) & 0xFF;
+
 												}
 
 												break;
@@ -208,14 +232,15 @@ int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbu
 																outbuf[b+2] = (cp >> 8) & 0xFF;
 																outbuf[b++] = cp & 0xFF;
 												} else {
-																outbuf[b+2] = ((cp >> 8) + 0xD800) & 0xFF;
-																outbuf[b++] = (cp + 0xDC00) & 0xFF;
+																cp -= 0x10000;
+
+
 												}
 												break;
 								case UTF8:
 												break;
 								}
-								writen_bytes = i;
+								writen_bytes = b;
 				}
 				return writen_bytes;
 }
@@ -233,7 +258,6 @@ int main(int argc, char *argv[]) {
 								fprintf(stderr, "Encoding no válido: %s\n", argv[1]);
 								return 1;
 				}
-
 				// Detectar codificación origen con byte order mark.
 				uint8_t bom[4];
 
@@ -261,21 +285,38 @@ int main(int argc, char *argv[]) {
 				}
 
 				// TODO: Si dest_enc no es UTF-8, hay que escribir un BOM.
+				if (dest_enc == UTF16BE) {
+								outbuf[0] = 0xFE;
+								outbuf[1] = 0xFF;
+				} else if (dest_enc == UTF16LE) {
+								outbuf[0] = 0xFF;
+								outbuf[1] = 0xFE;
+				} else if (dest_enc == UTF32BE) {
+								outbuf[0] = outbuf[1] = 0x00;
+								outbuf[2] = 0xFE;
+								outbuf[3] = 0xFF;
+				} else if (dest_enc == UTF32LE) {
+								outbuf[0] = 0xFF;
+								outbuf[1] = 0xFE;
+								outbuf[2] = outbuf[3] = 0x00;
+				}
+
 
 				while ((inbytes = read(STDIN_FILENO, inbuf + prevbytes, sizeof(inbuf) - prevbytes)) > 0) {
 								prevbytes += inbytes;
-								// fprintf(stderr, "Processing: %zu bytes, ", prevbytes);
+								//fprintf(stderr, "Processing: %zu bytes, ", prevbytes);
 
 								npoints = orig_to_ucs4(orig_enc, inbuf, &prevbytes, ucs4);
 								outbytes = ucs4_to_dest(dest_enc, ucs4, npoints, outbuf);
-								// fprintf(stderr, "codepoints: %d, output: %d bytes, remaining: %zu bytes\n",
-								//         npoints, outbytes, prevbytes);
+								//	fprintf(stderr, "codepoints: %d, output: %d bytes, remaining: %zu bytes\n",
+								//	        npoints, outbytes, prevbytes);
 
 								write(STDOUT_FILENO, outbuf, outbytes);
 
 								if (prevbytes > 0) {
 												// TODO: Se deben mover al incio de inbuf los bytes que
 												// quedaron sin procesar al final. (Ver memcpy arriba.)
+												memcpy(inbuf, inbuf + outbytes, prevbytes);
 								}
 				}
 }
