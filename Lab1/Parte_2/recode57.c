@@ -6,7 +6,7 @@
 
 
 enum encoding {
-				UTF8, UTF16BE, UTF16LE, UTF32BE, UTF32LE,
+				UTF8, UTF16BE, UTF16LE, UTF32BE, UTF32LE, NONE
 };
 
 /*
@@ -24,7 +24,7 @@ static enum encoding str_to_encoding(const char *enc) {
 				else if (strcmp(enc, "UTF-32LE") == 0)
 								return UTF32LE;
 				else
-								return -1;
+								return NONE;
 }
 
 /*
@@ -53,13 +53,9 @@ static bool has_codepoint(enum encoding enc, uint8_t *buf, size_t n) {
 				case UTF32LE:
 								return n >= 4;
 				case UTF16BE:
-								// TODO: manejar surrogates.
-								return (n >= 4 ||
-								        (n >= 2 && 1 /* buf[0] NO es un high surrogate */));
+								return (n >= 4 || ((n >= 2) && (0xD8 >= buf[0]) && (buf[0] >= 0xDB)));
 				case UTF16LE:
-								// TODO: manejar surrogates.
-								return (n >= 4 ||
-								        (n >= 2 && 1 /* buf[1] NO es un high surrogate */));
+								return (n >= 4 || ((n >= 2) && (0xD8 >= buf[1]) && (buf[1] >= 0xDB)));
 				case UTF8:
 								return (n >= 4 ||
 								        (n >= 3 && buf[0] <= 0xEF) ||
@@ -136,19 +132,20 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 												break;
 								case UTF16LE:
 												if ( ((0xD8 <= buf[b+1]) && ( buf[b+1] <= 0xDB) &&  (0xDC <= buf[b+3]) && (buf[b+3] <= 0xDF)) ) {
-																cp |= buf[b++] << 4;
+																cp |= buf[b++] << 8;
 																cp |= buf[b++];
-																cp &= 0x03FF;
+																cp &= 0xFF03;
 																cp <<= 10;
-																cp |= buf[b++] << 4;
+																cp |= buf[b++] << 8;
 																cp |= buf[b++];
-																cp &= 0x3FF;
-																cp += 0x10000;
+																cp &= 0xFF03;
+																cp += 0x08000000;
 
 																*nbytes -= 4;
 												} else {
-																cp |= buf[b+2] << 8;
+																cp |= buf[b++] << 8;
 																cp |= buf[b++];
+																cp <<= 16;
 																*nbytes -= 2;
 												}
 
