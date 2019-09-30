@@ -59,12 +59,12 @@ int main(int argc, char const *argv[]) {
 																				printf("Escribi %i bytes.\n", buff_write);
 																}
 												}
-								} else if (errno == 4) { // EINTR
+								} else if (buff_read < 0 && errno == 4) { // EINTR
 												fprintf(stderr,"No se pudo abrir fichero de origen, probando de nuevo");
-								} else if (errno == 21) {
+								} else if (buff_read < 0 && errno == 21) {
 												fprintf(stderr, "El archivo es un directorio.\n");
 												return EX_NOINPUT; // Codigo 66
-								} else {
+								} else if (buff_read < 0 ) {
 												perror("Error: ");
 								}
 
