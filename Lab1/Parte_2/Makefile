@@ -5,6 +5,7 @@ recode: recode57.c
 	@echo " "
 	@echo "Compilo recode57"
 	${CC} ${CFLAGS} recode57.c -o builds/recode57
+	cp builds/recode57 recode_samples/
 	@echo " "
 
 clean:
