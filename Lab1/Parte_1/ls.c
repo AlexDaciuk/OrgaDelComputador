@@ -22,13 +22,13 @@ int main(int argc, char const *argv[]) {
 								getcwd(cwd, sizeof(cwd));
 								break;
 				case 2:
-								*cwd = *argv[1];
+								strcpy(cwd,argv[1]);
 								break;
 				default:
 								return EX_USAGE;
 				}
 
-				printf("El directorio es %s\n \n", cwd);
+				printf("El directorio es %s \n\n", cwd);
 
 				struct dirent *dp;
 				int dir_fd;
@@ -37,11 +37,14 @@ int main(int argc, char const *argv[]) {
 				dir_fd = dirfd(dir);
 
 				while ( (dp = readdir(dir)) ) {
-								printf("Dirfd: %i, name: %s\n", dir_fd, dp->d_name);
-								if (fstatat(dir_fd, dp->d_name, &fileStat, 0) != -1) {
-												printf("%s \t %li\n", dp->d_name, fileStat.st_size);
+								if (fstatat(dir_fd, dp->d_name, &fileStat, 0) != -1 &&
+								    (dp->d_name[0] != '.')) {
+												if (fileStat.st_mode & S_IFDIR) {
+																printf("%s\n", dp->d_name);
+												} else if (fileStat.st_mode & S_IFREG) {
+																printf("%s \t %li\n", dp->d_name, fileStat.st_size);
+												}
 								}
-								//printf("Errno %m\n");
 				}
 
 				return EX_OK;
