@@ -121,7 +121,7 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 												// TODO: Implementar los cuatro casos posibles de UTF-8.
 												break;
 								case UTF16BE:
-												if (((0xD8 <= buf[b+1]) && (buf[b+1] <= 0xDB) &&  (0xDC <= buf[b+3]) && (buf[b+3] <= 0xDF))) {
+												if (((0xD8 <= buf[b]) && (buf[b] <= 0xDB) &&  (0xDC <= buf[b+2]) && (buf[b+2] <= 0xDF))) {
 
 																cp += 0x10000;
 
@@ -135,7 +135,7 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 												*nbytes -= 4;
 												break;
 								case UTF16LE:
-												if ( ((0xD8 <= buf[b+2]) && ( buf[b+2] <= 0xDB) &&  (0xDC <= buf[b+4]) && (buf[b+4] <= 0xDF)) ) {
+												if ( ((0xD8 <= buf[b+1]) && ( buf[b+1] <= 0xDB) &&  (0xDC <= buf[b+3]) && (buf[b+3] <= 0xDF)) ) {
 																cp |= buf[b++] << 4;
 																cp |= buf[b++];
 																cp &= 0x03FF;
