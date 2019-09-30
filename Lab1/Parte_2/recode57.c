@@ -121,8 +121,10 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 												// TODO: Implementar los cuatro casos posibles de UTF-8.
 												break;
 								case UTF16BE:
-												if ( (buf[b+1] >= 0xD8 && buf[b+1] <= 0xDB &&
-												      buf[b+3] >= 0xDC && buf[b+3] <= 0xDF) ) {
+												if (((0xD8 <= buf[b+1]) && (buf[b+1] <= 0xDB) &&  (0xDC <= buf[b+3]) && (buf[b+3] <= 0xDF))) {
+
+																cp += 0x10000;
+
 																*nbytes -= 4;
 												} else {
 																cp |= buf[b++] << 8;
@@ -133,8 +135,15 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 												*nbytes -= 4;
 												break;
 								case UTF16LE:
-												if ( (buf[b+2] >= 0xD8 && buf[b+2] <= 0xDB &&
-												      buf[b+4] >= 0xDC && buf[b+4] <= 0xDF) ) {
+												if ( ((0xD8 <= buf[b+2]) && ( buf[b+2] <= 0xDB) &&  (0xDC <= buf[b+4]) && (buf[b+4] <= 0xDF)) ) {
+																cp |= buf[b++] << 4;
+																cp |= buf[b++];
+																cp &= 0x03FF;
+																cp <<= 10;
+																cp |= buf[b++] << 4;
+																cp |= buf[b++];
+																cp &= 0x3FF;
+																cp += 0x10000;
 
 																*nbytes -= 4;
 												} else {
@@ -175,16 +184,16 @@ int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbu
 								uint32_t cp = input[i];
 								switch (enc) {
 								case UTF32LE:
-												outbuf[b++] = cp & 0xFF;
-												outbuf[b++] = (cp >> 8) & 0xFF;
-												outbuf[b++] = (cp >> 16) & 0xFF;
-												outbuf[b++] = (cp >> 24) & 0xFF;
+												outbuf[b++] |= cp & 0xFF;
+												outbuf[b++] |= (cp >> 8) & 0xFF;
+												outbuf[b++] |= (cp >> 16) & 0xFF;
+												outbuf[b++] |= (cp >> 24) & 0xFF;
 												break;
 								case UTF32BE:
-												outbuf[b++] = (cp >> 24) & 0xFF;
-												outbuf[b++] = (cp >> 16) & 0xFF;
-												outbuf[b++] = (cp >> 24) & 0xFF;
-												outbuf[b++] = cp & 0xFF;
+												outbuf[b++] |= (cp >> 24) & 0xFF;
+												outbuf[b++] |= (cp >> 16) & 0xFF;
+												outbuf[b++] |= (cp >> 24) & 0xFF;
+												outbuf[b++] |= cp & 0xFF;
 												break;
 								case UTF16BE:
 												if (cp <= 0xFFFF) {
