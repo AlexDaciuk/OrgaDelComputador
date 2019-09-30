@@ -24,12 +24,17 @@ int main(int argc, char const *argv[]) {
 				unsigned char buffer[BUFF_SIZE];
 				int buff_read;
 
-				if ( (r_fd = open(argv[1], O_RDONLY)) < 0 ) {
+				while ( (r_fd = open(argv[1], O_RDONLY)) < 0 ) {
 								if (errno == 21) {
 												fprintf(stderr, "El archivo es un directorio.\n");
+												return EX_NOINPUT; // Codigo 66
+								} else if (errno == 4) { // EINTR
+												fprintf(stderr,"No se pudo abrir fichero de origen, probando de nuevo");
+
+								} else {
+												perror("Error: ");
+												return EX_NOINPUT; // Codigo 66
 								}
-								fprintf(stderr,"No se pudo abrir fichero de origen, error: %m\n");
-								return EX_NOINPUT; // Codigo 66
 				}
 
 				// Abro el archivo de destino, si no existe, lo creo con permisos 0666
@@ -54,9 +59,13 @@ int main(int argc, char const *argv[]) {
 																				printf("Escribi %i bytes.\n", buff_write);
 																}
 												}
+								} else if (errno == 4) { // EINTR
+												fprintf(stderr,"No se pudo abrir fichero de origen, probando de nuevo");
 								} else if (errno == 21) {
 												fprintf(stderr, "El archivo es un directorio.\n");
 												return EX_NOINPUT; // Codigo 66
+								} else {
+												perror("Error: ");
 								}
 
 				}
