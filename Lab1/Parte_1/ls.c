@@ -34,9 +34,15 @@ int main(int argc, char const *argv[]) {
 				int dir_fd;
 				struct stat fileStat;
 				DIR *dir = opendir(cwd);
+				if ( !( dir ) ) {
+								fprintf(stderr, "Solo se pueden listar directorios.\n");
+								return EX_USAGE;
+				}
 				dir_fd = dirfd(dir);
 
-				while ( (dp = readdir(dir)) ) {
+				errno = 0;
+
+				while ( (dp = readdir(dir))) {
 								if (fstatat(dir_fd, dp->d_name, &fileStat, 0) != -1 &&
 								    (dp->d_name[0] != '.')) {
 												if (fileStat.st_mode & S_IFDIR) {
@@ -45,6 +51,11 @@ int main(int argc, char const *argv[]) {
 																printf("%s \t %li\n", dp->d_name, fileStat.st_size);
 												}
 								}
+				}
+
+				if (errno != 0) {
+								perror("Error: ");
+								return EX_IOERR;
 				}
 
 				return EX_OK;
