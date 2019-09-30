@@ -16,7 +16,7 @@ int main(int argc, char const *argv[]) {
 				   de ejecucion del programa, el segundo es el source y el tercero el destination.
 				 */
 				if (argc != 3) {
-								printf("Cantidad de argumentos incorrecta, se necesitan 2 argumentos para utilizar este programa.\n", );
+								fprintf(stderr,"Cantidad de argumentos incorrecta, se necesitan 2 argumentos para utilizar este programa.\n");
 								return EX_USAGE; // Codigo 64
 				}
 
@@ -24,23 +24,23 @@ int main(int argc, char const *argv[]) {
 				unsigned char buffer[BUFF_SIZE];
 				int buff_read;
 
-				if ( (r_fd = open(argv[1], O_RDONLY)) ) {
+				if ( (r_fd = open(argv[1], O_RDONLY)) < 0 ) {
 								if (errno == 21) {
-												printf("El archivo %s es un directorio.\n", *argv[1]);
+												fprintf(stderr, "El archivo es un directorio.\n");
 								}
-								printf("No se pudo abrir fichero de origen, error: %m\n");
+								fprintf(stderr,"No se pudo abrir fichero de origen, error: %m\n");
 								return EX_NOINPUT; // Codigo 66
 				}
 
 				// Abro el archivo de destino, si no existe, lo creo con permisos 0666
 				// si existe, lo trunco
-				if ( (w_fd = open(argv[2], O_WRONLY | O_TRUNC | O_CREAT, DEF_PERM)) ) {
-								printf("No se pudo abrir fichero de destino, error: %m\n");
+				if ( (w_fd = open(argv[2], O_WRONLY | O_TRUNC | O_CREAT, DEF_PERM)) < 0 ) {
+								fprintf(stderr,"No se pudo abrir fichero de destino, error: %m\n");
 								return EX_CANTCREAT; // Codigo 73
 				}
 
-				while( ( (buff_read = read(r_fd, buffer, BUFF_SIZE)) > 0) )   {
-								if (errno < 0) {
+				while( (buff_read = read(r_fd, buffer, BUFF_SIZE)) )   {
+								if (errno == 0) {
 												printf("Lei  %i bytes.\n", buff_read);
 
 												int total_wrote = 0;
@@ -54,10 +54,15 @@ int main(int argc, char const *argv[]) {
 																				printf("Escribi %i bytes.\n", buff_write);
 																}
 												}
+								} else if (errno == 21) {
+												fprintf(stderr, "El archivo es un directorio.\n");
+												return EX_NOINPUT; // Codigo 66
 								}
+
 				}
 
-				printf("Errno : %i\n", errno );
+				if (errno != 0)
+								printf("Errno : %i\n", errno );
 
 				return EX_OK;
 }
