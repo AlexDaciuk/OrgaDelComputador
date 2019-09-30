@@ -52,9 +52,9 @@ static bool has_codepoint(enum encoding enc, uint8_t *buf, size_t n) {
 				case UTF32LE:
 								return n >= 4;
 				case UTF16BE:
-								return (n >= 4 || ((n >= 2) && (0xD8 >= buf[0]) && (buf[0] >= 0xDB)));
+								return (n >= 4 || ((n >= 2) && ((buf[1] < 0xD8) || (buf[1] > 0xDB))));
 				case UTF16LE:
-								return (n >= 4 || ((n >= 2) && (0xD8 >= buf[1]) && (buf[1] >= 0xDB)));
+								return (n >= 4 || ((n >= 2) && ((buf[0] < 0xD8) || (buf[0] > 0xDB))));
 				case UTF8:
 								return (n >= 4 ||
 								        (n >= 3 && buf[0] <= 0xEF) ||
@@ -126,15 +126,14 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 																cp += 0x08000000;
 
 																*nbytes -= 4;
+
 												} else {
 																cp |= buf[b++];
 																cp |= buf[b++]<< 8;
 																cp <<= 16;
 																*nbytes -= 2;
-
 												}
 
-												*nbytes -= 4;
 												break;
 								case UTF16LE:
 												if ( ((0xD8 <= buf[b+1]) && ( buf[b+1] <= 0xDB) &&  (0xDC <= buf[b+3]) && (buf[b+3] <= 0xDF)) ) {
@@ -153,12 +152,12 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 																cp |= buf[b++];
 																cp <<= 16;
 																*nbytes -= 2;
+
 												}
 
 
 												break;
 								default:
-												fprintf(stderr, "Entre al default\n");
 												break;
 
 								}
@@ -216,11 +215,9 @@ int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbu
 
 												break;
 								case UTF16BE:
-												if (cp <= 0xFFFF) {
-																outbuf[b++] = (cp >> 8) & 0xFF;
-																fprintf(stderr, "outbuf[%i] vale %#x\n", b-1, outbuf[b-1] );
-																outbuf[b++] = cp & 0xFF;
-																fprintf(stderr, "outbuf[%i] vale %#x\n", b-1, outbuf[b-1] );
+												if (cp <= 0xFFFF0000) {
+																outbuf[b++] = (cp >> 16) & 0xFF;
+																outbuf[b++] = (cp >>24) & 0xFF;
 												} else {
 																cp -= 0x10000;
 
@@ -228,9 +225,10 @@ int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbu
 
 												break;
 								case UTF16LE:
-												if (cp <= 0xFFFF) {
-																outbuf[b+2] = (cp >> 8) & 0xFF;
-																outbuf[b++] = cp & 0xFF;
+												if (cp <= 0xFFFF0000) {
+																outbuf[b++] = (cp >> 24) & 0xFF;
+																outbuf[b++] = (cp >> 16) & 0xFF;
+
 												} else {
 																cp -= 0x10000;
 
@@ -238,6 +236,9 @@ int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbu
 												}
 												break;
 								case UTF8:
+												break;
+
+								default:
 												break;
 								}
 								writen_bytes = b;
@@ -304,12 +305,11 @@ int main(int argc, char *argv[]) {
 
 				while ((inbytes = read(STDIN_FILENO, inbuf + prevbytes, sizeof(inbuf) - prevbytes)) > 0) {
 								prevbytes += inbytes;
-								//fprintf(stderr, "Processing: %zu bytes, ", prevbytes);
+								// fprintf(stderr, "Processing: %zu bytes, ", prevbytes);
 
 								npoints = orig_to_ucs4(orig_enc, inbuf, &prevbytes, ucs4);
 								outbytes = ucs4_to_dest(dest_enc, ucs4, npoints, outbuf);
-								//	fprintf(stderr, "codepoints: %d, output: %d bytes, remaining: %zu bytes\n",
-								//	        npoints, outbytes, prevbytes);
+								//fprintf(stderr, "codepoints: %d, output: %d bytes, remaining: %zu bytes\n", //npoints, outbytes, prevbytes);
 
 								write(STDOUT_FILENO, outbuf, outbytes);
 
