@@ -235,18 +235,18 @@ int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbu
 												}
 												break;
 								case UTF8:
-												// U+0 .. U+00007F
+
 												if ( ((cp >> 24) & 0xFF) <= 0x7F) {
-
-												} // U+000080 .. U+0007FF
+																// U+0 .. U+00007F
+												}
 												else if (0x07 >= ((cp >> 16) & 0x00FF) && ((cp >> 24) & 0xFF) >= 0x80) {
-
-												} // U+000800 .. U+00FFFF
+																// U+000080 .. U+0007FF
+												}
 												else if ( ((cp >> 16) & 0xFF) >= 0x08 && ((cp >> 16) & 0xFF) <= 0xFF) {
-
-												} // U+00100000 .. U+0010FFFF
+																// U+000800 .. U+00FFFF
+												}
 												else if (((cp >> 8) & 0xFF) >= 0x01 && ((cp >> 8) & 0xFF) <= 0x10) {
-
+																// U+00100000 .. U+0010FFFF
 												}
 
 												break;
