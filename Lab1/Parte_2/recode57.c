@@ -113,12 +113,17 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 												*nbytes -= 4;
 												break;
 								case UTF8:
+												uint32_t tmp = 0;
 												if ( (buf[0] & 0x80) == 0 ) {
-																// U+0 .. U+00007F
+																tmp |= (buf[b++] << 25);
 												} else if ( ((buf[0] & 0xC0) ==  0xC0) && ((buf[1] & 0x80) == 0x80) ) {
-																// U+000080 .. U+0007FF
+																tmp |= (buf[0] & 0x3F) << 27;
+																tmp |= (buf[1] & 0x7F) << 21;
 												} else if ( ((buf[0] & 0x70) == 0x70) && ((buf[1] & 0x80) == 0x80) && ((buf[2] & 0x80) == 0x80)) {
-																// U+000800 .. U+00FFFF
+																tmp |= (buf[0] & 0x1F) << 28;
+																tmp |= (buf[1] & 0x7F) << 22;
+																tmp |= (buf[2] & 0x7F) <<
+																        // U+000800 .. U+00FFFF
 												} else if ( ((buf[0] & 0xF0) == 0xF0) && ((buf[1] & 0x80) == 0x80) && ((buf[2] & 0x80) == 0x80) && ((buf[3] & 0x80) == 0x80)) {
 																// U+00100000 .. U+0010FFFF
 												}
