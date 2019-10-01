@@ -113,7 +113,15 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 												*nbytes -= 4;
 												break;
 								case UTF8:
-												// TODO: Implementar los cuatro casos posibles de UTF-8.
+												if ( (buf[0] & 0x80) == 0 ) {
+																// U+0 .. U+00007F
+												} else if ( ((buf[0] & 0xC0) ==  0xC0) && ((buf[1] & 0x80) == 0x80) ) {
+																// U+000080 .. U+0007FF
+												} else if ( ((buf[0] & 0x70) == 0x70) && ((buf[1] & 0x80) == 0x80) && ((buf[2] & 0x80) == 0x80)) {
+																// U+000800 .. U+00FFFF
+												} else if ( ((buf[0] & 0xF0) == 0xF0) && ((buf[1] & 0x80) == 0x80) && ((buf[2] & 0x80) == 0x80) && ((buf[3] & 0x80) == 0x80)) {
+																// U+00100000 .. U+0010FFFF
+												}
 												break;
 								case UTF16BE:
 												if (((0xD8 <= buf[b]) && (buf[b] <= 0xDB) &&  (0xDC <= buf[b+2]) && (buf[b+2] <= 0xDF))) {
