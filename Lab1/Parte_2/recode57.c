@@ -31,15 +31,15 @@ static enum encoding str_to_encoding(const char *enc) {
  * Devuelve el encoding correspondiente al byte order mark (BOM).
  */
 static enum encoding bom_to_encoding(uint8_t *bom) {
-				if (bom[0] == 0xFE && bom[1] == 0xFF) {
+				if (bom[0] == 0xFE && bom[1] == 0xFF)
 								return UTF16BE;
-				} else if (bom[0] == 0x00 && bom[1] == 0x00 && bom[2] == 0xFE && bom[3] == 0xFF) {
+				else if (bom[0] == 0x00 && bom[1] == 0x00 && bom[2] == 0xFE && bom[3] == 0xFF)
 								return UTF32BE;
-				} else if (bom[0] == 0xFF && bom[1] == 0xFE && bom[2] == 0x00 && bom[3] == 0x00) {
+				else if (bom[0] == 0xFF && bom[1] == 0xFE && bom[2] == 0x00 && bom[3] == 0x00)
 								return UTF32LE;
-				} else if (bom[0] == 0xFF && bom[1] == 0xFE) {
+				else if (bom[0] == 0xFF && bom[1] == 0xFE)
 								return UTF16LE;
-				}
+
 				return UTF8;
 }
 
@@ -52,9 +52,9 @@ static bool has_codepoint(enum encoding enc, uint8_t *buf, size_t n) {
 				case UTF32LE:
 								return n >= 4;
 				case UTF16BE:
-								return (n >= 4 || ((n >= 2) && ((buf[1] < 0xD8) || (buf[1] > 0xDB))));
-				case UTF16LE:
 								return (n >= 4 || ((n >= 2) && ((buf[0] < 0xD8) || (buf[0] > 0xDB))));
+				case UTF16LE:
+								return (n >= 4 || ((n >= 2) && ((buf[1] < 0xD8) || (buf[1] > 0xDB))));
 				case UTF8:
 								return (n >= 4 ||
 								        (n >= 3 && buf[0] <= 0xEF) ||
@@ -184,14 +184,14 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
  * elementos, o bytes (caso enc=UTF-32).
  */
 int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbuf) {
-				int writen_bytes = 0;
+				int written_bytes = 0;
 
 				int b = 0;
 
 				// TODO: Si dest_enc no es UTF-8, hay que empezar a escribir 2 o 4 bytes mas adelante del comienzo del buff de salida
-				if ((enc == UTF16BE) | (enc == UTF16LE) ) {
+				if ((enc == UTF16BE) || (enc == UTF16LE) ) {
 								b = 2;
-				} else if ((enc == UTF32BE) | (enc == UTF32LE)) {
+				} else if ((enc == UTF32BE) || (enc == UTF32LE)) {
 								b = 4;
 				}
 
@@ -205,7 +205,6 @@ int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbu
 												outbuf[b++] = (cp >> 8) & 0xFF;
 												outbuf[b++] = (cp & 0xFF);
 
-
 												break;
 								case UTF32BE:
 												outbuf[b++] = cp & 0xFF;
@@ -217,7 +216,7 @@ int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbu
 								case UTF16BE:
 												if (cp <= 0xFFFF0000) {
 																outbuf[b++] = (cp >> 16) & 0xFF;
-																outbuf[b++] = (cp >>24) & 0xFF;
+																outbuf[b++] = (cp >> 24) & 0xFF;
 												} else {
 																cp -= 0x10000;
 
@@ -236,14 +235,28 @@ int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbu
 												}
 												break;
 								case UTF8:
+												// U+0 .. U+00007F
+												if ( ((cp >> 24) & 0xFF) <= 0x7F) {
+
+												} // U+000080 .. U+0007FF
+												else if (0x07 >= ((cp >> 16) & 0x00FF) && ((cp >> 24) & 0xFF) >= 0x80) {
+
+												} // U+000800 .. U+00FFFF
+												else if ( ((cp >> 16) & 0xFF) >= 0x08 && ((cp >> 16) & 0xFF) <= 0xFF) {
+
+												} // U+00100000 .. U+0010FFFF
+												else if (((cp >> 8) & 0xFF) >= 0x01 && ((cp >> 8) & 0xFF) <= 0x10) {
+
+												}
+
 												break;
 
 								default:
 												break;
 								}
-								writen_bytes = b;
+								written_bytes = b;
 				}
-				return writen_bytes;
+				return written_bytes;
 }
 
 
@@ -285,7 +298,7 @@ int main(int argc, char *argv[]) {
 								prevbytes = 2;
 				}
 
-				// TODO: Si dest_enc no es UTF-8, hay que escribir un BOM.
+				// Si dest_enc no es UTF-8, hay que escribir un BOM.
 				if (dest_enc == UTF16BE) {
 								outbuf[0] = 0xFE;
 								outbuf[1] = 0xFF;
@@ -314,8 +327,6 @@ int main(int argc, char *argv[]) {
 								write(STDOUT_FILENO, outbuf, outbytes);
 
 								if (prevbytes > 0) {
-												// TODO: Se deben mover al incio de inbuf los bytes que
-												// quedaron sin procesar al final. (Ver memcpy arriba.)
 												memcpy(inbuf, inbuf + outbytes, prevbytes);
 								}
 				}
