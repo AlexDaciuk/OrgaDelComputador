@@ -116,17 +116,30 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 												uint32_t tmp = 0;
 												if ( (buf[0] & 0x80) == 0 ) {
 																tmp |= (buf[b++] << 25);
+																*nbytes -= 1;
 												} else if ( ((buf[0] & 0xC0) ==  0xC0) && ((buf[1] & 0x80) == 0x80) ) {
 																tmp |= (buf[0] & 0x3F) << 27;
 																tmp |= (buf[1] & 0x7F) << 21;
+																*nbytes -= 2;
 												} else if ( ((buf[0] & 0x70) == 0x70) && ((buf[1] & 0x80) == 0x80) && ((buf[2] & 0x80) == 0x80)) {
 																tmp |= (buf[0] & 0x1F) << 28;
 																tmp |= (buf[1] & 0x7F) << 22;
-																tmp |= (buf[2] & 0x7F) <<
-																        // U+000800 .. U+00FFFF
+																tmp |= (buf[2] & 0x7F) << 16;
+																*nbytes -= 3;
 												} else if ( ((buf[0] & 0xF0) == 0xF0) && ((buf[1] & 0x80) == 0x80) && ((buf[2] & 0x80) == 0x80) && ((buf[3] & 0x80) == 0x80)) {
-																// U+00100000 .. U+0010FFFF
+																tmp |= (buf[0] & 0x15) << 29;
+																tmp |= (buf[1] & 0x7F) << 23;
+																tmp |= (buf[2] & 0x7F) << 17;
+																tmp |= (buf[3] & 0x7F) << 11;
+																*nbytes -= 4;
 												}
+												// tmp esta el cp en big endian, ahora nada mas tengo que guardar en cp lo mismo
+												// pero en little endian
+												cp |= tmp << 24;
+												cp |= (tmp << 16) & 0xFF0000;
+												cp |= (tmp << 8) & 0x00FF;
+												cp |= tmp & 0xFF;
+
 												break;
 								case UTF16BE:
 												if (((0xD8 <= buf[b]) && (buf[b] <= 0xDB) &&  (0xDC <= buf[b+2]) && (buf[b+2] <= 0xDF))) {
