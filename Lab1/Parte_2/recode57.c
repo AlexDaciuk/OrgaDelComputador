@@ -118,9 +118,9 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 												fprintf(stderr, "buf[%i] vale %#x\n",b+1, buf[b+1]);
 
 												if ( (buf[0] & 0x80) == 0 ) {
-																tmp |= (buf[b++] << 24);
-																fprintf(stderr, "Aca1\n");
-																fprintf(stderr, "tmp vale %#x \n", tmp);
+																tmp = (buf[b++] << 24) & 0xFF000000;
+																//fprintf(stderr, "Aca1\n");
+																//fprintf(stderr, "tmp vale %#x \n", tmp);
 																*nbytes -= 1;
 												} else if ( ((buf[0] & 0xC0) ==  0xC0) && ((buf[1] & 0x80) == 0x80) ) {
 																tmp |= (buf[b++] & 0x3F) << 27;
@@ -131,7 +131,7 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 																tmp |= (buf[b++] & 0x1F) << 28;
 																tmp |= (buf[b++] & 0x7F) << 22;
 																tmp |= (buf[b++] & 0x7F) << 16;
-																fprintf(stderr, "Aca3\n");
+																//fprintf(stderr, "Aca3\n");
 
 																*nbytes -= 3;
 												} else if ( ((buf[0] & 0xF0) == 0xF0) && ((buf[1] & 0x80) == 0x80) && ((buf[2] & 0x80) == 0x80) && ((buf[3] & 0x80) == 0x80)) {
@@ -139,7 +139,7 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 																tmp |= (buf[b++] & 0x7F) << 23;
 																tmp |= (buf[b++] & 0x7F) << 17;
 																tmp |= (buf[b++] & 0x7F) << 11;
-																fprintf(stderr, "Aca3\n");
+																//	fprintf(stderr, "Aca3\n");
 
 																*nbytes -= 4;
 												}
@@ -147,12 +147,15 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 												// tmp esta el cp en big endian, ahora nada mas tengo que guardar en cp lo mismo
 												// pero en little endian
 												fprintf(stderr, "tmp vale %#x \n", tmp);
-												cp |= tmp >> 24;
-												cp |= (tmp >> 16) & 0xFF0000;
-												cp |= (tmp >> 8) & 0x00FF;
-												cp |= tmp & 0xFF;
 
-												fprintf(stderr, "cp vale %#x \n", cp);
+												//cp |= tmp >> 24;
+												//cp |= (tmp >> 16) & 0xFF0000;
+												//cp |= (tmp >> 8) & 0x00FF;
+												//cp |= tmp & 0xFF;
+
+												cp = tmp;
+
+												//fprintf(stderr, "cp vale %#x \n", cp);
 
 												break;
 								case UTF16BE:
@@ -276,25 +279,25 @@ int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbu
 												}
 												break;
 								case UTF8:
-												fprintf(stderr, "cp vale %#x \n", cp);
+												fprintf(stderr, "out_cp vale %#x \n", cp);
 
-												tmp |= (cp >> 24) & 0xFF;
-												tmp |= (cp >> 16) & 0xFF;
-												tmp |= (cp >> 8) & 0xFF;
-												tmp |= cp & 0xFF;
-
-												//fprintf(stderr, "tmp vale %#x\n", tmp);
+												//tmp |= (cp >> 24) & 0xFF;
+												//tmp |= (cp >> 16) & 0xFF;
+												//tmp |= (cp >> 8) & 0xFF;
+												//tmp |= cp & 0xFF;
 
 
 												if ( ((cp >> 24) & 0xFF) <= 0x7F) {
+																tmp = (cp >> 24) & 0xFF;
+																//fprintf(stderr, "tmp vale %#x\n", tmp);
 																outbuf[b++] = tmp;
 																//fprintf(stderr, "outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 												}
 												else if (0x07 >= ((cp >> 16) & 0x00FF) && ((cp >> 24) & 0xFF) >= 0x80) {
 																outbuf[b++] = ((cp >> 6) & 0x1F) | 0xC0;
-																//fprintf(stderr, "outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
+																fprintf(stderr, "outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 																outbuf[b++] = (cp & 0x3F) | 0x80;
-																//fprintf(stderr, "outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
+																fprintf(stderr, "outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 												}
 												else if ( ((cp >> 16) & 0xFF) >= 0x08 && ((cp >> 16) & 0xFF) <= 0xFF) {
 																outbuf[b++] = ((cp >> 12) & 0x0F) | 0xE0;
