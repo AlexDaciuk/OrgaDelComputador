@@ -125,8 +125,11 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 																*nbytes -= 2;
 												} else if ( ((buf[b+0] & 0xF0) == 0xE0) && ((buf[b+1] & 0x80) == 0x80) && ((buf[b+2] & 0x80) == 0x80)) {
 																cp |= (buf[b++] & 0x1F) << 12;
+																fprintf(stderr, "3buf[%i] vale %#x y con la mascara vale %#x\n", b-1,  buf[b-1], buf[b-1] & 0x1F );
 																cp |= (buf[b++] & 0x7F) << 6;
+																fprintf(stderr, "3buf[%i] vale %#x y con la mascara vale %#x\n", b-1,  buf[b-1], buf[b-1] & 0x1F );
 																cp |= (buf[b++] & 0x7F);
+																fprintf(stderr, "3buf[%i] vale %#x y con la mascara vale %#x\n", b-1,  buf[b-1], buf[b-1] & 0x1F );
 
 
 																*nbytes -= 3;
@@ -136,27 +139,20 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 																//	fprintf(stderr, "buf[%i] vale %#x\n",b+1, buf[b+1]);
 																//	fprintf(stderr, "buf[%i] vale %#x\n",b+2, buf[b+2]);
 																//	fprintf(stderr, "buf[%i] vale %#x\n",b+3, buf[b+3]);
-																cp |= (buf[b++] & 0x15) << 18;
+																cp |= (buf[b++] & 0x07) << 18;
+																fprintf(stderr, "4buf[%i] vale %#x y con la mascara vale %#x\n", b-1,  buf[b-1], buf[b-1] & 0x1F );
 																cp |= (buf[b++] & 0x7F) << 12;
+																fprintf(stderr, "4buf[%i] vale %#x y con la mascara vale %#x\n", b-1,  buf[b-1], buf[b-1] & 0x1F );
 																cp |= (buf[b++] & 0x7F) << 6;
+																fprintf(stderr, "4buf[%i] vale %#x y con la mascara vale %#x\n", b-1,  buf[b-1], buf[b-1] & 0x1F );
 																cp |= (buf[b++] & 0x7F);
+																fprintf(stderr, "4buf[%i] vale %#x y con la mascara vale %#x\n", b-1,  buf[b-1], buf[b-1] & 0x1F );
 
 
 																*nbytes -= 4;
 												}
 
-												tmp = cp;
-												cp = 0;
-												//fprintf(stderr, "tmp vale %#x \n", tmp );
-												cp = (tmp << 24);
-												//fprintf(stderr, "cp vale %#x\n", cp );
-												cp = (tmp << 16);
-												//fprintf(stderr, "cp vale %#x\n", cp );
-												cp = (tmp << 8);
-												//fprintf(stderr, "cp vale %#x\n", cp );
-												cp = tmp;
-
-												//fprintf(stderr, "cp vale %#x\n", cp );
+												fprintf(stderr, "cp vale %#x\n", cp );
 
 												break;
 								case UTF16BE:
@@ -270,10 +266,11 @@ int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbu
 												break;
 								case UTF16LE:
 												if (cp <= 0xFFFF0000) {
+																fprintf(stderr, "CP vale %#x \n", cp);
 																outbuf[b++] = (cp >> 24) & 0xFF;
-																//fprintf(stderr, "1outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
+																fprintf(stderr, "1outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 																outbuf[b++] = (cp >> 16) & 0xFF;
-																//fprintf(stderr, "1outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
+																fprintf(stderr, "1outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 												} else {
 																cp -= 0x10000;
 
