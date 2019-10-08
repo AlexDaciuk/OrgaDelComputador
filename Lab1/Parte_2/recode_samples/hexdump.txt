@@ -1,0 +1,57 @@
+=== simple_UTF-8.txt ===
+ 41 70 6f 6c 6f 0a
+
+=== simple_UTF-16BE.txt ===
+ fe ff 00 41 00 70 00 6f 00 6c 00 6f 00 0a
+
+=== simple_UTF-16LE.txt ===
+ ff fe 41 00 70 00 6f 00 6c 00 6f 00 0a 00
+
+=== simple_UTF-32BE.txt ===
+ 00 00 fe ff 00 00 00 41 00 00 00 70 00 00 00 6f
+ 00 00 00 6c 00 00 00 6f 00 00 00 0a
+
+=== simple_UTF-32LE.txt ===
+ ff fe 00 00 41 00 00 00 70 00 00 00 6f 00 00 00
+ 6c 00 00 00 6f 00 00 00 0a 00 00 00
+
+=== bmp_UTF-8.txt ===
+ e1 bc 88 cf 80 cf 8c ce bb ce bb cf 89 ce bd 0a
+
+=== bmp_UTF-16BE.txt ===
+ fe ff 1f 08 03 c0 03 cc 03 bb 03 bb 03 c9 03 bd
+ 00 0a
+
+=== bmp_UTF-16LE.txt ===
+ ff fe 08 1f c0 03 cc 03 bb 03 bb 03 c9 03 bd 03
+ 0a 00
+
+=== bmp_UTF-32BE.txt ===
+ 00 00 fe ff 00 00 1f 08 00 00 03 c0 00 00 03 cc
+ 00 00 03 bb 00 00 03 bb 00 00 03 c9 00 00 03 bd
+ 00 00 00 0a
+
+=== bmp_UTF-32LE.txt ===
+ ff fe 00 00 08 1f 00 00 c0 03 00 00 cc 03 00 00
+ bb 03 00 00 bb 03 00 00 c9 03 00 00 bd 03 00 00
+ 0a 00 00 00
+
+=== surrogate_UTF-8.txt ===
+ f0 9f 8f b9 20 e2 98 80 ef b8 8f 20 f0 9f 8e b6
+ 0a
+
+=== surrogate_UTF-16BE.txt ===
+ fe ff d8 3c df f9 00 20 26 00 fe 0f 00 20 d8 3c
+ df b6 00 0a
+
+=== surrogate_UTF-16LE.txt ===
+ ff fe 3c d8 f9 df 20 00 00 26 0f fe 20 00 3c d8
+ b6 df 0a 00
+
+=== surrogate_UTF-32BE.txt ===
+ 00 00 fe ff 00 01 f3 f9 00 00 00 20 00 00 26 00
+ 00 00 fe 0f 00 00 00 20 00 01 f3 b6 00 00 00 0a
+
+=== surrogate_UTF-32LE.txt ===
+ ff fe 00 00 f9 f3 01 00 20 00 00 00 00 26 00 00
+ 0f fe 00 00 20 00 00 00 b6 f3 01 00 0a 00 00 00
