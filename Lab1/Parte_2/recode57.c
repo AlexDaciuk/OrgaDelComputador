@@ -6,7 +6,7 @@
 
 
 enum encoding {
-				UTF8, UTF16BE, UTF16LE, UTF32BE, UTF32LE, NONE
+				NONE = -1, UTF8, UTF16BE, UTF16LE, UTF32BE, UTF32LE
 };
 
 /*
@@ -24,7 +24,7 @@ static enum encoding str_to_encoding(const char *enc) {
 				else if (strcmp(enc, "UTF-32LE") == 0)
 								return UTF32LE;
 				else
-								return NONE; // ARREGLAR ESTO
+								return NONE;
 }
 
 /*
@@ -95,6 +95,7 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 				// de nuevo).
 				while (has_codepoint(enc, &buf[b], *nbytes)) {
 								uint32_t cp = 0;
+								uint32_t tmp = 0;
 								switch (enc) {
 								case UTF32LE:
 												cp |= (buf[b++] << 24);
@@ -114,18 +115,18 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 												break;
 								case UTF8:
 												if ( (buf[b+0] & 0x80) == 0 ) {
-																cp = (buf[b++] << 24) & 0xFF000000;
+																cp = buf[b++] & 0x7F;
 
 																*nbytes -= 1;
 												} else if ( ((buf[b+0] & 0xE0) ==  0xC0) && ((buf[b+1] & 0x80) == 0x80) ) {
-																cp |= (buf[b++] & 0x3F) << 22;
-																cp |= (buf[b++] & 0x7F) << 16;
+																cp |= (buf[b++] & 0x3F) << 6;
+																cp |= (buf[b++] & 0x7F);
 
 																*nbytes -= 2;
 												} else if ( ((buf[b+0] & 0xF0) == 0xE0) && ((buf[b+1] & 0x80) == 0x80) && ((buf[b+2] & 0x80) == 0x80)) {
-																cp |= (buf[b++] & 0x1F) << 28;
-																cp |= (buf[b++] & 0x7F) << 22;
-																cp |= (buf[b++] & 0x7F) << 16;
+																cp |= (buf[b++] & 0x1F) << 12;
+																cp |= (buf[b++] & 0x7F) << 6;
+																cp |= (buf[b++] & 0x7F);
 
 
 																*nbytes -= 3;
@@ -135,14 +136,27 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 																//	fprintf(stderr, "buf[%i] vale %#x\n",b+1, buf[b+1]);
 																//	fprintf(stderr, "buf[%i] vale %#x\n",b+2, buf[b+2]);
 																//	fprintf(stderr, "buf[%i] vale %#x\n",b+3, buf[b+3]);
-																cp |= (buf[b++] & 0x15) << 29;
-																cp |= (buf[b++] & 0x7F) << 23;
-																cp |= (buf[b++] & 0x7F) << 17;
-																cp |= (buf[b++] & 0x7F) << 11;
+																cp |= (buf[b++] & 0x15) << 18;
+																cp |= (buf[b++] & 0x7F) << 12;
+																cp |= (buf[b++] & 0x7F) << 6;
+																cp |= (buf[b++] & 0x7F);
 
 
 																*nbytes -= 4;
 												}
+
+												tmp = cp;
+												cp = 0;
+												//fprintf(stderr, "tmp vale %#x \n", tmp );
+												cp = (tmp << 24);
+												//fprintf(stderr, "cp vale %#x\n", cp );
+												cp = (tmp << 16);
+												//fprintf(stderr, "cp vale %#x\n", cp );
+												cp = (tmp << 8);
+												//fprintf(stderr, "cp vale %#x\n", cp );
+												cp = tmp;
+
+												//fprintf(stderr, "cp vale %#x\n", cp );
 
 												break;
 								case UTF16BE:
@@ -257,7 +271,9 @@ int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbu
 								case UTF16LE:
 												if (cp <= 0xFFFF0000) {
 																outbuf[b++] = (cp >> 24) & 0xFF;
+																//fprintf(stderr, "1outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 																outbuf[b++] = (cp >> 16) & 0xFF;
+																//fprintf(stderr, "1outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 												} else {
 																cp -= 0x10000;
 
@@ -265,37 +281,36 @@ int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbu
 												}
 												break;
 								case UTF8:
-												//fprintf(stderr, "cp vale %#x\n", cp);
+												fprintf(stderr, "cp vale %#x\n", cp);
 												if ( ((cp >> 24) & 0xFF) <= 0x7F) {
 
 																outbuf[b++] = (cp >> 24) & 0xFF;
-																//	fprintf(stderr, "1outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
+																fprintf(stderr, "1outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 												}
 												else if (0x07 >= ((cp >> 16) & 0x00FF) && ((cp >> 24) & 0xFF) >= 0x80) {
 																outbuf[b++] = ((cp >> 6) & 0x1F) | 0xC0;
-																//	fprintf(stderr, "2outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
+																fprintf(stderr, "2outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 																outbuf[b++] = (cp & 0x3F) | 0x80;
-																//	fprintf(stderr, "2outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
+																fprintf(stderr, "2outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 												}
 												else if ( ((cp >> 16) & 0xFF) >= 0x08 && ((cp >> 16) & 0xFF) <= 0xFF) {
 																outbuf[b++] = ((cp >> 12) & 0x0F) | 0xE0;
-																//	fprintf(stderr, "3outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
+																fprintf(stderr, "3outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 																outbuf[b++] = ((cp >> 6) & 0x3F) | 0x80;
-																//	fprintf(stderr, "3outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
+																fprintf(stderr, "3outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 																outbuf[b++] = (cp & 0x3F) | 0x80;
-																//	fprintf(stderr, "3outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
+																fprintf(stderr, "3outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 												}
 												else if (((cp >> 8) & 0xFF) >= 0x01 && ((cp >> 8) & 0xFF) <= 0x10) {
 																outbuf[b++] = ((cp >> 18) & 0x07) | 0xF0;
-																//fprintf(stderr, "outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
+																fprintf(stderr, "outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 																outbuf[b++] = ((cp >> 12) & 0x0F) | 0x80;
-																//fprintf(stderr, "outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
+																fprintf(stderr, "outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 																outbuf[b++] = ((cp >> 6) & 0x3F) | 0x80;
-																//fprintf(stderr, "outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
+																fprintf(stderr, "outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 																outbuf[b++] = (cp & 0x3F) | 0x80;
+																fprintf(stderr, "outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 												}
-
-
 
 												break;
 
