@@ -268,12 +268,12 @@ int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbu
 												break;
 								case UTF8:
 												fprintf(stderr, "cp vale %#x\n", cp);
-												if ( ((cp >> 24) & 0xFF) <= 0x7F) {
+												if ( ((cp >> 16) & 0xFFFF) <= 0x7F) {
 
 																outbuf[b++] = (cp >> 24) & 0xFF;
 																fprintf(stderr, "1outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 												}
-												else if (0x07 >= ((cp >> 16) & 0x00FF) && ((cp >> 24) & 0xFF) >= 0x80) {
+												else if (0x07 >= ((cp >> 16) & 0xFF00) && ((cp >> 24) & 0xFF) >= 0x80) {
 																outbuf[b++] = ((cp >> 6) & 0x1F) | 0xC0;
 																fprintf(stderr, "2outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 																outbuf[b++] = (cp & 0x3F) | 0x80;
