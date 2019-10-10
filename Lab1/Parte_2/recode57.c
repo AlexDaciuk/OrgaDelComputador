@@ -195,7 +195,7 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 								}
 
 								destbuf[i++] = cp;
-								//fprintf(stderr, "destbuf[%i] vale %#x\n", i-1, destbuf[i-1]);
+								////fprintf(stderr, "destbuf[%i] vale %#x\n", i-1, destbuf[i-1]);
 				}
 				return i;
 }
@@ -228,7 +228,7 @@ int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbu
 
 				for (int i=0; i < npoints; i++) {
 								uint32_t cp = input[i];
-								//fprintf(stderr, "cp vale %#x\n", cp);
+								////fprintf(stderr, "cp vale %#x\n", cp);
 
 								switch (enc) {
 								case UTF32LE:
@@ -268,34 +268,34 @@ int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbu
 												break;
 								case UTF8:
 												fprintf(stderr, "cp vale %#x\n", cp);
-												if ( ((cp >> 16) & 0xFFFF) <= 0x7F) {
-
-																outbuf[b++] = (cp >> 24) & 0xFF;
-																fprintf(stderr, "1outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
+												if ( ((cp >> 24) & 0xFF) <= 0x7F && ((cp >> 16) & 0xFF) == 0x00) {
+																outbuf[b++] = (cp >> 24) & 0x7F;
+																//fprintf(stderr, "1outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 												}
-												else if (0x07 >= ((cp >> 16) & 0xFF00) && ((cp >> 24) & 0xFF) >= 0x80) {
+												else if (0x07 >= ((cp >> 16) & 0xFF) && ((cp >> 24) & 0xFF) >= 0x80) {
 																outbuf[b++] = ((cp >> 6) & 0x1F) | 0xC0;
-																fprintf(stderr, "2outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
+																//fprintf(stderr, "2outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 																outbuf[b++] = (cp & 0x3F) | 0x80;
-																fprintf(stderr, "2outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
+																//fprintf(stderr, "2outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 												}
 												else if ( ((cp >> 16) & 0xFF) >= 0x08 && ((cp >> 16) & 0xFF) <= 0xFF) {
-																outbuf[b++] = ((cp >> 12) & 0x0F) | 0xE0;
+																outbuf[b++] = ((cp >> 20) & 0x0F) | 0xE0;
 																fprintf(stderr, "3outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
-																outbuf[b++] = ((cp >> 6) & 0x3F) | 0x80;
+																fprintf(stderr, "cp shifteado 16 a la derecha me deja %#x \n", (cp>>16) & 0x0F);
+																outbuf[b++] = (((cp >> 14) & 0x3C) | (( cp >> 30) & 0x02)) | 0x80;
 																fprintf(stderr, "3outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
-																outbuf[b++] = (cp & 0x3F) | 0x80;
+																outbuf[b++] = ((cp >> 24) & 0x3F) | 0x80;
 																fprintf(stderr, "3outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 												}
 												else if (((cp >> 8) & 0xFF) >= 0x01 && ((cp >> 8) & 0xFF) <= 0x10) {
 																outbuf[b++] = ((cp >> 18) & 0x07) | 0xF0;
-																fprintf(stderr, "outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
+																//fprintf(stderr, "outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 																outbuf[b++] = ((cp >> 12) & 0x0F) | 0x80;
-																fprintf(stderr, "outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
+																//fprintf(stderr, "outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 																outbuf[b++] = ((cp >> 6) & 0x3F) | 0x80;
-																fprintf(stderr, "outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
+																//fprintf(stderr, "outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 																outbuf[b++] = (cp & 0x3F) | 0x80;
-																fprintf(stderr, "outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
+																//fprintf(stderr, "outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 												}
 
 												break;
@@ -313,12 +313,12 @@ int main(int argc, char *argv[]) {
 				enum encoding orig_enc, dest_enc;
 
 				if (argc != 2) {
-								fprintf(stderr, "Uso: ./recode57 <encoding>\n");
+								//fprintf(stderr, "Uso: ./recode57 <encoding>\n");
 								return 1;
 				}
 
 				if ((dest_enc = str_to_encoding(argv[1])) < 0) {
-								fprintf(stderr, "Encoding no válido: %s\n", argv[1]);
+								//fprintf(stderr, "Encoding no válido: %s\n", argv[1]);
 								return 1;
 				}
 				// Detectar codificación origen con byte order mark.
@@ -367,11 +367,11 @@ int main(int argc, char *argv[]) {
 
 				while ((inbytes = read(STDIN_FILENO, inbuf + prevbytes, sizeof(inbuf) - prevbytes)) > 0) {
 								prevbytes += inbytes;
-								// fprintf(stderr, "Processing: %zu bytes, ", prevbytes);
+								// //fprintf(stderr, "Processing: %zu bytes, ", prevbytes);
 
 								npoints = orig_to_ucs4(orig_enc, inbuf, &prevbytes, ucs4);
 								outbytes = ucs4_to_dest(dest_enc, ucs4, npoints, outbuf);
-								//fprintf(stderr, "codepoints: %d, output: %d bytes, remaining: %zu bytes\n", //npoints, outbytes, prevbytes);
+								////fprintf(stderr, "codepoints: %d, output: %d bytes, remaining: %zu bytes\n", //npoints, outbytes, prevbytes);
 
 								write(STDOUT_FILENO, outbuf, outbytes);
 
