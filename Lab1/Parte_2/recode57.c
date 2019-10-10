@@ -267,25 +267,22 @@ int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbu
 												}
 												break;
 								case UTF8:
-												fprintf(stderr, "cp vale %#x\n", cp);
+												//fprintf(stderr, "cp vale %#x\n", cp);
 												if ( ((cp >> 24) & 0xFF) <= 0x7F && ((cp >> 16) & 0xFF) == 0x00) {
 																outbuf[b++] = (cp >> 24) & 0x7F;
 																//fprintf(stderr, "1outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 												}
 												else if (0x07 >= ((cp >> 16) & 0xFF) && ((cp >> 24) & 0xFF) >= 0x80) {
-																outbuf[b++] = ((cp >> 6) & 0x1F) | 0xC0;
+																outbuf[b++] = (((cp >> 30) & 0x03) | ((cp >> 14) & 0x0F)) | 0xC0;
 																//fprintf(stderr, "2outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
-																outbuf[b++] = (cp & 0x3F) | 0x80;
-																//fprintf(stderr, "2outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
+																outbuf[b++] = ((cp >> 24) & 0x3F) | 0x80;
+																///	fprintf(stderr, "2outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 												}
 												else if ( ((cp >> 16) & 0xFF) >= 0x08 && ((cp >> 16) & 0xFF) <= 0xFF) {
 																outbuf[b++] = ((cp >> 20) & 0x0F) | 0xE0;
-																fprintf(stderr, "3outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
-																fprintf(stderr, "cp shifteado 16 a la derecha me deja %#x \n", (cp>>16) & 0x0F);
 																outbuf[b++] = (((cp >> 14) & 0x3C) | (( cp >> 30) & 0x02)) | 0x80;
-																fprintf(stderr, "3outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
 																outbuf[b++] = ((cp >> 24) & 0x3F) | 0x80;
-																fprintf(stderr, "3outbuf[%i] vale %#x\n",b-1, outbuf[b-1]);
+
 												}
 												else if (((cp >> 8) & 0xFF) >= 0x01 && ((cp >> 8) & 0xFF) <= 0x10) {
 																outbuf[b++] = ((cp >> 18) & 0x07) | 0xF0;
