@@ -149,15 +149,22 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 												break;
 								case UTF16BE:
 												if (((0xD8 <= buf[b]) && (buf[b] <= 0xDB) &&  (0xDC <= buf[b+2]) && (buf[b+2] <= 0xDF))) {
+																cp |= buf[b++] << 8;
 																cp |= buf[b++];
-																cp |= buf[b++]<< 8;
-																cp &= 0xFF03;
+																cp -= 0xD800;
 																cp <<= 10;
-																cp |= buf[b++];
-																cp |= buf[b++]<<8;
-																cp += 0x08000000;
-
+																cp |= ((buf[b+0] << 8) | buf[b+1]) - 0xDC00;
+																b += 2;
+																cp += 0x10000;
 																*nbytes -= 4;
+
+																tmp = cp;
+																cp = 0;
+																cp |= (tmp << 24) & 0xFF000000;
+																cp |= (tmp << 8) & 0xFF0000;
+																cp |= (tmp >> 8) & 0xFF00;
+
+
 
 												} else {
 																cp |= buf[b++];
@@ -171,8 +178,8 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 												if ( ((0xD8 <= buf[b+1]) && ( buf[b+1] <= 0xDB) &&  (0xDC <= buf[b+3]) && (buf[b+3] <= 0xDF)) ) {
 																cp |= buf[b++] << 8;
 																cp |= buf[b++];
-																cp &= 0xFF03;
-																cp <<= 10;
+																cp -= 0xD8;
+																cp <<=;
 																cp |= buf[b++] << 8;
 																cp |= buf[b++];
 																cp &= 0xFF03;
@@ -195,7 +202,7 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 								}
 
 								destbuf[i++] = cp;
-								////fprintf(stderr, "destbuf[%i] vale %#x\n", i-1, destbuf[i-1]);
+								fprintf(stderr, "destbuf[%i] vale %#x\n", i-1, destbuf[i-1]);
 				}
 				return i;
 }
