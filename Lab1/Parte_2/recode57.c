@@ -249,22 +249,31 @@ int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbu
 
 												break;
 								case UTF16BE:
-												if (cp <= 0xFFFF0000) {
+												if ( (cp & 0xF00) == 0 ) {
 																outbuf[b++] = (cp >> 16) & 0xFF;
 																outbuf[b++] = (cp >> 24) & 0xFF;
 												} else {
-																cp -= 0x10000;
-
+																//fprintf(stderr, "Entre\n");
+																cp -= 0x100;
+																outbuf[b++] = 0xD8;
+																outbuf[b++] = (cp >> 18) & 0x3F;
+																outbuf[b++] = ((cp >> 16) & 0x03) + 0xDC;
+																outbuf[b++] = (cp >> 24);
 												}
 
 												break;
 								case UTF16LE:
-												if (cp <= 0xFFFF0000) {
+												if ((cp & 0xF00) == 0) {
 																outbuf[b++] = (cp >> 24) & 0xFF;
 																outbuf[b++] = (cp >> 16) & 0xFF;
 
 												} else {
-																cp -= 0x10000;
+																cp -= 0x100;
+																outbuf[b++] = (cp >> 18) & 0x3F;
+																outbuf[b++] = 0xD8;
+																outbuf[b++] = (cp >> 24);
+																outbuf[b++] = ((cp >> 16) & 0x03) + 0xDC;
+
 
 
 												}
