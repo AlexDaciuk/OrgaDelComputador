@@ -174,11 +174,9 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 												break;
 								default:
 												break;
-
 								}
 
 								destbuf[i++] = cp;
-								//fprintf(stderr, "destbuf[%i] vale %#x\n", i-1, destbuf[i-1]);
 				}
 				return i;
 }
@@ -211,7 +209,6 @@ int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbu
 
 				for (int i=0; i < npoints; i++) {
 								uint32_t cp = input[i];
-								//fprintf(stderr, "cp vale %#x\n", cp);
 
 								switch (enc) {
 								case UTF32LE:
@@ -275,10 +272,6 @@ int ucs4_to_dest(enum encoding enc, uint32_t *input, int npoints, uint8_t *outbu
 												else if ( cp <= 0x7F) {
 																outbuf[b++] = cp | 0x00;
 												}
-
-
-
-
 												break;
 
 								default:
