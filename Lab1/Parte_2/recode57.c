@@ -176,22 +176,18 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 												break;
 								case UTF16LE:
 												if ( ((0xD8 <= buf[b+1]) && ( buf[b+1] <= 0xDB) &&  (0xDC <= buf[b+3]) && (buf[b+3] <= 0xDF)) ) {
-																cp |= buf[b++] << 8;
-																cp |= buf[b++];
-																cp -= 0xD8;
-																cp <<=;
-																cp |= buf[b++] << 8;
-																cp |= buf[b++];
-																cp &= 0xFF03;
-																cp += 0x08000000;
+																cp |= (((buf[b] << 8) | buf[b+1]) - 0xD8) << 10;
+																cp |= ((((buf[b+2] << 8) | (buf[b+3])) - 0xDC) & 0x03) << 16;
+																cp |= ((((buf[b+2] << 8) | (buf[b+3])) - 0xDC) & 0xFF00) << 16;
+																cp |= 0x01 << 8;
 
+																b += 4;
 																*nbytes -= 4;
 												} else {
 																cp |= buf[b++] << 8;
 																cp |= buf[b++];
 																cp <<= 16;
 																*nbytes -= 2;
-
 												}
 
 
@@ -202,7 +198,7 @@ int orig_to_ucs4(enum encoding enc, uint8_t *buf, size_t *nbytes, uint32_t *dest
 								}
 
 								destbuf[i++] = cp;
-								fprintf(stderr, "destbuf[%i] vale %#x\n", i-1, destbuf[i-1]);
+								//fprintf(stderr, "destbuf[%i] vale %#x\n", i-1, destbuf[i-1]);
 				}
 				return i;
 }
