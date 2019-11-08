@@ -13,6 +13,6 @@ main:
 
 .data
 msg:
-        .ascii "Hello, world!\n"
+        .asciz "Hello, world!\n"
 
 .set len, . - msg
