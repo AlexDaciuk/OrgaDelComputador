@@ -40,8 +40,8 @@ int main(void) { // (C.3)
             // No declaration needed; asm assumes symbols always exist.
 (A.6)          call write
 
-(A.7)         push $7
-(A.8)         call _exit
+(A.7)          push $7
+(A.8)          call _exit
 
 (A.9)  .data
 (A.10) msg:
@@ -50,19 +50,25 @@ int main(void) { // (C.3)
 (A.12) .set len, . - msg
 ```
 
-**(A.1) :**   
+**(A.1) :** La directiva **.global** hace que la etiqueta a la cual se refiere sea visible para el linkeador, en este caso, **main**.
 
-**(A.2) :**
+**(A.2) :** Se define la etiqueta **main** se corresponde con la linea **(C.3)** (?), esta etiqueta tiene que ser **main** si lo compila GCC, sino, suele ser **_start**.
 
 **(A.3) :** Se carga **len** a la pila, corresponde con linea **(C.4)**.
 
-**(A.4) :**
+**(A.4) :** Se carga **msg** a la pila, corresponde con linea **(C.4)**.
 
-**(A.5) :**  
+**(A.5) :** Se carga **1** a la pila, corresponde con linea **(C.4)**.
+
+**(A.6) :** Llamada a la syscall **write**
+
+**(A.7) :** Imagino que en $7 esta la direccion a donde tiene que volver el programa y es lo que usa exit, pero no estoy seguro por ahora.
+
+**(A.8) :** Llamada a la syscall **exit**.
 
 **(A.9) :** En la seccion **data** se declaran variables y constantes, son datos que no cambian en tiempo de ejecucion.
 
-**(A.10) :** Se declara la etiqueta **msg**
+**(A.10) :** Se declara la etiqueta **msg**, esta etiqueta apunta a la direccion de memoria del primer byte de la cadena.
 
 **(A.11) :** Define que **msg** es un string de tipo ASCII, en ASM un string ASCII no termina con **\0** o Null Byte, se corresponde con la linea de C.
 
@@ -72,5 +78,26 @@ int main(void) { // (C.3)
 
 4) Examinar, con objdump -S libc_hello, el código máquina generado e indicar el valor de len en la primera instrucción push. Explicar el efecto del operador . en la línea .set len, . - msg
 
+**len** vale **0xE** o 14 en decimal, que es el largo en bytes de la cadena **Hello, world!\n**, con el Null Byte.
 
 El operador punto (**.**) se refiere a la direccion de memoria actual, entonces **. - msg** es la direccion de memoria actual menos el valor del label **msg**.
+
+5) Mostrar un hex dump de la salida del programa en assembler.
+
+```
+0000000  48  65  6c  6c  6f  2c  20  77  6f  72  6c  64  21  0a
+          H   e   l   l   o   ,       w   o   r   l   d   !  \n
+0000016
+```
+
+6) Cambiar la directiva .ascii por .asciz y mostrar el hex dump resultante con el nuevo código. ¿Qué está ocurriendo? ¿Qué ocurre con el valor de len?
+
+```
+0000000  48  65  6c  6c  6f  2c  20  77  6f  72  6c  64  21  0a  00
+          H   e   l   l   o   ,       w   o   r   l   d   !  \n  \0
+0000017
+```
+
+La diferencia entre **.ascii** y **.asciz** en assembly es que **.asciz** termina los strings con 0, explicitamente, entonces ahora se esta imprimiendo ese 0 final.
+
+**len** ahora vale 15, ya que ahora el string tambien tiene un 0 al final.
