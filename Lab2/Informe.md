@@ -101,3 +101,21 @@ El operador punto (**.**) se refiere a la direccion de memoria actual, entonces 
 La diferencia entre **.ascii** y **.asciz** en assembly es que **.asciz** termina los strings con 0, explicitamente, entonces ahora se esta imprimiendo ese 0 final.
 
 **len** ahora vale 15, ya que ahora el string tambien tiene un 0 al final.
+
+### x86-call
+
+1) Mostrar en una sesión de GDB cómo imprimir las mismas instrucciones usando la directiva x $pc y el modificador adecuado.
+
+```
+(gdb) x/7iw $pc
+=> 0x8049186 <main>:    push   $0xf
+   0x804918b <main+5>:  push   $0x804c020
+   0x8049190 <main+10>: push   $0x1
+   0x8049192 <main+12>: call   0x8049060 <write@plt>
+   0x8049197 <main+17>: push   $0x7
+   0x8049199 <main+19>: call   0x8049040 <_exit@plt>
+   0x804919e <main+24>: xchg   %ax,%ax
+```
+
+
+2)  Después, usar el comando stepi (step instruction) para avanzar la ejecución hasta la llamada a write. En ese momento, mostrar los primeros cuatro valores de la pila justo antes e inmediatamente después de ejecutar la instrucción call, y explicar cada uno de ellos.
