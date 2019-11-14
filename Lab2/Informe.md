@@ -136,24 +136,19 @@ La diferencia entre **.ascii** y **.asciz** en assembly es que **.asciz** termin
 9               call write
 [1] (gdb) x/4x $esp
 0xffffd120:     0x00000001      0x0804c020      0x0000000f      0xf7dc5fa9
-(gdb) x/4 $esp
-0xffffd120:     1       134529056       15      -136552535
 (gdb) si
 0x08049060 in write@plt ()
-(gdb)  x/4x $esp
+[2] (gdb)  x/4x $esp
 0xffffd11c:     0x08049197      0x00000001      0x0804c020      0x0000000f
-(gdb) disas
-Dump of assembler code for function write@plt:
-=> 0x08049060 <+0>:     jmp    *0x804c014
-   0x08049066 <+6>:     push   $0x10
-   0x0804906b <+11>:    jmp    0x8049030
-End of assembler dump.
+
 
 ```
 
-En **[1]** vemos los 4 valores que estan en el stack, siendo los primeros 3 los correspondientes a las lineas **push   $0xf** , **push   $0x804c020** y **$0x1** del codigo assembly del archivo **libc_hello.S**, en orden inverso por ser un stack y el ultimo valor **0xf7dc5fa9** apunta al rango de memoria donde estan cargadas las funciones de libc(1).
+En **[1]** vemos 4 valores del stack, siendo los primeros 3 los correspondientes a las lineas **push   $0xf** , **push   $0x804c020** y **$0x1** del codigo assembly del archivo **libc_hello.S**, en orden inverso por ser un stack y el ultimo valor **0xf7dc5fa9** apunta al rango de memoria donde estan cargadas las funciones de libc(1).
 
-(1) Obs: Esto se puede ver viendo los maps asociados al PID mediante **cat /proc/\<pid\>/maps**
+En **[2]** vemos 4 valores del stack, siendo el primero **0x08049197** la posicion de memoria de **push   $0x7**, que es donde tiene que volver la ejeucion del programa despues de todo lo que tiene que hacer la syscall **write**
+
+(1) Obs: Esto se puede constatar viendo los maps asociados al PID mediante **cat /proc/\<pid\>/maps**
 
 ```
 alexarch:~/ $ sudo cat /proc/6324/maps                            
