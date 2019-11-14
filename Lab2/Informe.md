@@ -3,6 +3,13 @@
 ## Nombre : Alexis Daciuk
 ## Padron : 97630
 
+### Versiones
+**GCC** : 9.2.0  
+**make** : 4.2.1  
+**gdb** : 8.3.1  
+**binutils** : 2.33.1 (objdump, nm)  
+**coreutils** : 8.31 (od)
+
 
 
 ### x86-write
@@ -119,3 +126,48 @@ La diferencia entre **.ascii** y **.asciz** en assembly es que **.asciz** termin
 
 
 2)  Después, usar el comando stepi (step instruction) para avanzar la ejecución hasta la llamada a write. En ese momento, mostrar los primeros cuatro valores de la pila justo antes e inmediatamente después de ejecutar la instrucción call, y explicar cada uno de ellos.
+
+```
+(gdb) stepi
+5               push $msg
+(gdb) stepi
+6               push $1
+(gdb) stepi
+9               call write
+[1] (gdb) x/4x $esp
+0xffffd120:     0x00000001      0x0804c020      0x0000000f      0xf7dc5fa9
+(gdb) x/4 $esp
+0xffffd120:     1       134529056       15      -136552535
+(gdb) si
+0x08049060 in write@plt ()
+(gdb)  x/4x $esp
+0xffffd11c:     0x08049197      0x00000001      0x0804c020      0x0000000f
+(gdb) disas
+Dump of assembler code for function write@plt:
+=> 0x08049060 <+0>:     jmp    *0x804c014
+   0x08049066 <+6>:     push   $0x10
+   0x0804906b <+11>:    jmp    0x8049030
+End of assembler dump.
+
+```
+
+En **[1]** vemos los 4 valores que estan en el stack, siendo los primeros 3 los correspondientes a las lineas **push   $0xf** , **push   $0x804c020** y **$0x1** del codigo assembly del archivo **libc_hello.S**, en orden inverso por ser un stack y el ultimo valor **0xf7dc5fa9** apunta al rango de memoria donde estan cargadas las funciones de libc(1).
+
+(1) Obs: Esto se puede ver viendo los maps asociados al PID mediante **cat /proc/\<pid\>/maps**
+
+```
+alexarch:~/ $ sudo cat /proc/6324/maps                            
+08048000-0804b000 r-xp 00000000 fe:01 502744      /home/alexarch/Source_Code/OrgaDelComputador/Lab2/libc_hello
+0804b000-0804c000 r-xp 00002000 fe:01 502744      /home/alexarch/Source_Code/OrgaDelComputador/Lab2/libc_hello
+0804c000-0804d000 rwxp 00003000 fe:01 502744      /home/alexarch/Source_Code/OrgaDelComputador/Lab2/libc_hello
+f7da7000-f7f88000 r-xp 00000000 fe:00 773098      /usr/lib32/libc-2.30.so
+f7f88000-f7f8a000 r-xp 001e0000 fe:00 773098      /usr/lib32/libc-2.30.so
+f7f8a000-f7f8c000 rwxp 001e2000 fe:00 773098      /usr/lib32/libc-2.30.so
+f7f8c000-f7f90000 rwxp 00000000 00:00 0
+f7fce000-f7fd1000 r--p 00000000 00:00 0           [vvar]
+f7fd1000-f7fd3000 r-xp 00000000 00:00 0           [vdso]
+f7fd3000-f7ffc000 r-xp 00000000 fe:00 773087      /usr/lib32/ld-2.30.so
+f7ffc000-f7ffd000 r-xp 00028000 fe:00 773087      /usr/lib32/ld-2.30.so
+f7ffd000-f7ffe000 rwxp 00029000 fe:00 773087      /usr/lib32/ld-2.30.so
+fffdd000-ffffe000 rwxp 00000000 00:00 0           [stack]
+```
