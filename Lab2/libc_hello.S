@@ -4,10 +4,10 @@ main:
         push $len
         push $msg
         push $1
-
+        push $volver
         // No declaration needed; asm assumes symbols always exist.
-        call write
-
+        jmp write
+volver:
         push $7
         call _exit
 
