@@ -1,5 +1,9 @@
 .globl main
 main:
+        push $msg
+        call strlen
+        mov %eax, len
+
         // Call convention: arguments on the stack (reverse order).
         push $len
         push $msg
@@ -7,12 +11,13 @@ main:
         push $volver
         // No declaration needed; asm assumes symbols always exist.
         jmp write
+
 volver:
         push $7
         call _exit
 
 .data
 msg:
-        .asciz "Hello, world!\n"
-
-.set len, . - msg
+        .ascii "Hello, world!\n"
+len:
+        .long 0
