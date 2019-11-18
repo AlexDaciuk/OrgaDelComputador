@@ -8,6 +8,9 @@ SRCS := $(wildcard *.c)
 PROG := $(ASMS:%.S=%)
 PROG += $(ASMS:%.c=%)
 
+sys_%: sys_%.S
+	$(CC) $(ASFLAGS) $(CPPFLAGS) -nostartfiles $< -o $@
+
 all: $(PROG)
 
 clean:
