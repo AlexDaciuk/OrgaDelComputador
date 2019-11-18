@@ -166,3 +166,67 @@ f7ffc000-f7ffd000 r-xp 00028000 fe:00 773087      /usr/lib32/ld-2.30.so
 f7ffd000-f7ffe000 rwxp 00029000 fe:00 773087      /usr/lib32/ld-2.30.so
 fffdd000-ffffe000 rwxp 00000000 00:00 0           [stack]
 ```
+
+
+### x86-lib
+
+1) Compilar y ejecutar el archivo completo int80_hi.S. Mostrar la salida de nm --undefined para este nuevo binario.
+
+```
+alexarch:Lab2/ (master*) $ nm --undefined int80_hi                                                  
+         w __gmon_start__
+         w _ITM_deregisterTMCloneTable
+         w _ITM_registerTMCloneTable
+         U __libc_start_main@@GLIBC_2.0
+```
+
+2) Escribir una versión modificada llamada sys_strlen.S en la que, eliminando la directiva .set len, se calcule la longitud del mensaje (tercer parámetro para write) usando directamente strlen(3) (el código será muy parecido al de ejercicios anteriores).
+
+```
+#include <sys/syscall.h>  // SYS_write, SYS_exit
+
+//
+// See: <https://en.wikibooks.org/wiki/X86_Assembly/Interfacing_with_Linux>.
+//
+
+.globl main
+main:
+        push $msg
+        call strlen
+        mov %eax, %edx         // %edx == third argument (count)
+        mov $SYS_write, %eax   // %eax == syscall number
+        mov $1, %ebx           // %ebx == first argument (fd)
+        mov $msg, %ecx         // %ecx == second argument (buf)
+        int $0x80
+
+        mov $SYS_exit, %eax
+        mov $7, %ebx
+        int $0x80
+
+.data
+msg:
+        .ascii "Hello, world!\n"
+```
+
+3) En la convención de llamadas de GCC, ciertos registros son caller-saved (por ejemplo %ecx) y ciertos otros callee-saved (por ejemplo %ebx). Responder:
+
+a) ¿Qué significa que un registro sea callee-saved en lugar de caller-saved?
+
+Un registro calee-saved es un registro que contiene datos que tienen que ser conservados, por ende, una funcion en caso de querer utilizar esos registros tiene que guardar esos valores y luego restaurar su valor antes de llamar a `ret`
+
+Por otra parte, un registro caller-saved son registros que pueden ser usados sin ninguna condicion de conservacion de valores.
+
+
+b)  En x86 ¿de qué tipo, caller-saved o callee-saved, es cada registro según la convención de llamadas de GCC?
+
+Caller-saved : eax, ecx, edx
+
+Callee-saved: ebx, esi, edi, ebp, esp
+
+
+4) Leer en Guide to Bare Metal Programming with GCC la sección: Linker options for default libraries and start files. En el archivo sys_strlen.S del punto anterior, renombrar la función main a \_start, y realizar las siguientes cuatro pruebas de compilación:
+
+  *  int80_hi.S con -nodefaultlibs, luego con -nostartfiles
+  *  sys_strlen.S con -nodefaultlibs, luego con -nostartfiles
+
+Mostrar el resultado (compila o no) en una tabla 2 × 2, así como los errores de compilación. Responder: ¿alguno de los dos archivos compila con -nostdlib?
