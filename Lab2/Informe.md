@@ -229,4 +229,76 @@ Callee-saved: ebx, esi, edi, ebp, esp
   *  int80_hi.S con -nodefaultlibs, luego con -nostartfiles
   *  sys_strlen.S con -nodefaultlibs, luego con -nostartfiles
 
-Mostrar el resultado (compila o no) en una tabla 2 × 2, así como los errores de compilación. Responder: ¿alguno de los dos archivos compila con -nostdlib?
+Mostrar el resultado (compila o no) en una tabla 2 × 2, así como los errores de compilación.
+
+int80_hi : Compila con **-nostartfiles** [1] y no compila con **-nodefaultlibs** [3]
+
+sys_strlen : Compila con **-nostartfiles** y no compila con **-nodefaultlibs** [2]
+
+**[1]** : Compila con el siguiente warning :
+```
+/usr/bin/ld: warning: cannot find entry symbol _start; defaulting to 0000000008049020
+```
+**[2]** : No compila con el error:
+```
+/usr/bin/ld: /usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../lib32/crt1.o: in function `_start':
+(.text+0x1c): undefined reference to `__libc_csu_fini'
+/usr/bin/ld: (.text+0x23): undefined reference to `__libc_csu_init'
+/usr/bin/ld: (.text+0x2c): undefined reference to `main'
+/usr/bin/ld: (.text+0x32): undefined reference to `__libc_start_main'
+/usr/bin/ld: /tmp/ccljrVQS.o: in function `_start':
+/home/alexarch/Source_Code/OrgaDelComputador/Lab2/sys_strlen.S:10: undefined reference to `strlen'
+collect2: error: ld returned 1 exit status
+make: *** [<builtin>: sys_strlen] Error 1
+```
+
+**[3]** : No compila con el error :
+
+```
+/usr/bin/ld: /usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../lib32/crt1.o: in function `_start':
+(.text+0x1c): undefined reference to `__libc_csu_fini'
+/usr/bin/ld: (.text+0x23): undefined reference to `__libc_csu_init'
+/usr/bin/ld: (.text+0x32): undefined reference to `__libc_start_main'
+collect2: error: ld returned 1 exit status
+make: *** [<builtin>: int80_hi] Error 1
+```
+
+**Responder:** ¿alguno de los dos archivos compila con -nostdlib?
+
+Si **int80_hi** compila con el mismo warning que tenia con **-nostartfiles** **[1]** y **sys_strlen** no compila con el error :
+
+```
+/usr/bin/ld: warning: cannot find entry symbol _start; defaulting to 0000000008049000
+/usr/bin/ld: /tmp/ccS5WvAS.o: in function `_start':
+/home/alexarch/Source_Code/OrgaDelComputador/Lab2/sys_strlen.S:10: undefined reference to `strlen'
+collect2: error: ld returned 1 exit status
+make: *** [<builtin>: sys_strlen] Error 1
+```
+
+5) Añadir al archivo Makefile una regla que permita compilar sys_strlen.S sin errores, así como cualquier otro archivo cuyo nombre empiece por sys:
+
+```
+sys_%: sys_%.S
+	$(CC) $(ASFLAGS) $(CPPFLAGS) -nostartfiles $< -o $@
+```
+
+6) Mostrar la salida de nm --undefined para el binario **sys_strlen**, y explicar las diferencias respecto a **int80_hi**.
+
+```
+alexarch:Lab2/ (master*) $ nm --undefined-only sys_strlen
+         U strlen@@GLIBC_2.0
+alexarch:Lab2/ (master*) $ nm --undefined-only int80_hi
+         w __gmon_start__
+         w _ITM_deregisterTMCloneTable
+         w _ITM_registerTMCloneTable
+         U __libc_start_main@@GLIBC_2.0
+
+```
+
+El ouput de nm se puede entender de la siguiente manera
+
+**U strlen@@GLIBC_2.0**
+
+Con la **U** nos indica que el simbolo no esta definido, que cosa no esta definida? Todo lo que esta antes del **@@**, en este caso **strlen** y lo que esta despues del **@@** es donde posiblemente se pueda encontrar ese simbolo, en este caso **GLIBC_2.0**
+
+Con la **w** nos indica que esta "debilmente" definido, esto significa que no es necesario que ese simbolo se resuelva a momento de linkeado, se deja la resolucion a momento de ejecucion.
