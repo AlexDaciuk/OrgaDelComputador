@@ -302,3 +302,8 @@ El ouput de nm se puede entender de la siguiente manera
 Con la **U** nos indica que el simbolo no esta definido, que cosa no esta definida? Todo lo que esta antes del **@@**, en este caso **strlen** y lo que esta despues del **@@** es donde posiblemente se pueda encontrar ese simbolo, en este caso **GLIBC_2.0**
 
 Con la **w** nos indica que esta "debilmente" definido, esto significa que no es necesario que ese simbolo se resuelva a momento de linkeado, se deja la resolucion a momento de ejecucion.
+
+
+### x86-ret
+
+Se pide ahora modificar int80_hi.S para que, en lugar de invocar a a \_exit(), la ejecución finalice sencillamente con una instrucción ret. ¿Cómo se pasa en este caso el valor de retorno?

@@ -4,8 +4,8 @@
 // See: <https://en.wikibooks.org/wiki/X86_Assembly/Interfacing_with_Linux>.
 //
 
-.globl main
-main:
+.globl _start
+_start:
         push $msg
         call strlen
         mov %eax, %edx         // %edx == third argument (count)
