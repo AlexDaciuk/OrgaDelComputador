@@ -307,3 +307,8 @@ Con la **w** nos indica que esta "debilmente" definido, esto significa que no es
 ### x86-ret
 
 Se pide ahora modificar int80_hi.S para que, en lugar de invocar a a \_exit(), la ejecución finalice sencillamente con una instrucción ret. ¿Cómo se pasa en este caso el valor de retorno?
+
+El valor de retorno cuando se usa `ret` es el valor que esta en el registro `eax`
+
+
+Se pide también escribir un nuevo programa, libc_puts.S, que use una instrucción ret en lugar de una llamada a \_exit. Al contrario que int80_hi.S, este programa sí modifica la pila. Para simplificar la tarea, libc_puts.S puede usar puts(3) en lugar de write(2)
