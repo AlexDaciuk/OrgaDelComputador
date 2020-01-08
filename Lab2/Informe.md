@@ -363,3 +363,7 @@ En este caso si, se restaura el valor original de `%ebp`
 TODO
 
 ### x86-argv
+
+En este ejercicio se pide implementar un programa en assembler que imprima sus argumentos por pantalla, uno por línea. Se implementarán tres versiones sucesivas:
+
+- sys_argv.S: imprime el primer argumento solamente, usando una llamada directa al sistema.

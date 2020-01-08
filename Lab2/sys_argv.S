@@ -19,7 +19,8 @@ _start:
         add   $1, %edx
 
         pop   %edi
-        mov   %edi, (%ecx, %edx, 1) // Agrego el tamaño en bytes
+        movl  %edi, (%ecx, %edx, 1) // Agrego el tamaño en bytes
+        add   $1, %edx
 
         movl  $('\n'), (%ecx, %edx, 1)  // Agrego otro salto de linea al final
         add   $1, %edx
