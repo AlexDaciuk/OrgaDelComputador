@@ -3,7 +3,9 @@
 
 const char msg[] = "Hello, world!\n";
 
+extern void my_exit(int status);
+
 int main(void) {
   write(1, msg, strlen(msg));
-  _exit(7);
+  my_exit(7);
 }

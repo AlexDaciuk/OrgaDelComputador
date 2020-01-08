@@ -312,3 +312,54 @@ El valor de retorno cuando se usa `ret` es el valor que esta en el registro `eax
 
 
 Se pide también escribir un nuevo programa, libc_puts.S, que use una instrucción ret en lugar de una llamada a \_exit. Al contrario que int80_hi.S, este programa sí modifica la pila. Para simplificar la tarea, libc_puts.S puede usar puts(3) en lugar de write(2)
+
+```
+.globl main
+main:
+        push  $msg
+        call  puts
+        pop   %ecx
+        mov   $0, %eax
+
+        ret
+
+msg:
+        .ascii "Hello, world!\n\0"
+```
+
+### x86-ebp
+
+- ¿Qué valor sobreescribió GCC cuando usó `mov $7, (%esp)` en lugar de `push $7` para la llamada a \_exit?
+
+Sobreescribió el primer elemento del stack, a diferencia de push, que agrega el valor inmediato "7"
+
+- La versión C no restaura el valor original de los registros %esp y %ebp. Cambiar la llamada a \_exit(7) por return 7, y mostrar en qué cambia el código generado. ¿Se restaura ahora el valor original de %ebp?
+
+
+  GCC genera el siguiente codigo para la linea `return 7` de C
+
+  ```
+  8         return 7;
+  (1) 0x08049195 <+31>:    mov    $0x7,%eax
+  (2) 0x0804919a <+36>:    mov    -0x4(%ebp),%ecx
+  (3) 0x0804919d <+39>:    leave  
+  (4) 0x0804919e <+40>:    lea    -0x4(%ecx),%esp
+  (5) 0x080491a1 <+43>:    ret
+  ```
+
+En (1) nada mas copia el valor 7 a `%eax` que es el valor de retorno
+
+En (3) ejecuta la instruccion `leave` que segun la documentacion libera el stack frame generado para ese procedimiento, basicamente copia la direccion que esta en `%ebp` a `%esp` esto permite que con un simple `pop %ebp` pueda restaurarse el stack frame del procedimiento padre.
+
+En este caso si, se restaura el valor original de `%ebp`
+
+
+- Crear un archivo llamado lib/exit.c, ¿Qué ocurre con %ebp?
+
+(Pasa lo mismo que en el punto anterior, no se si tendria que dar distinto)
+
+- En hello.c, cambiar la declaración de my_exit y verificar qué ocurre con %ebp, relacionándolo con el significado del atributo noreturn.
+
+TODO
+
+### x86-argv

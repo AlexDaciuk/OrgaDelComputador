@@ -16,4 +16,8 @@ all: $(PROG)
 clean:
 	rm -f $(PROG) *.o core
 
+hello: hello.c lib/exit.c
+
+
+
 .PHONY: clean all
